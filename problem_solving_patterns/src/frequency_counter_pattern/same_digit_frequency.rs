@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 /// ## Same Digit Frequency Challenge
 /// Given two positive integers, find out if the two numbers have the same freqency of digits
 ///
@@ -13,15 +15,11 @@ pub fn same_digit_frequency(num1: u32, num2: u32) -> bool {
     /*
         The only way of checking that two numbers have the same number of digits in
         (without converting to a string or array) is to loop over each digit in
-        the number.
-
-        Although ideally this length check would happen at the beginning of the function and
-        just return if the numbers didn't have the same digit count. By that time we
-        could have already carried out the logic required for this algorithm,
-        so this check is delayed till the end of the function to catch the edge case.
+        the number and count them. As such, no tangible time is saved in comparing
+        the lengths of each number prior to carrying out the required logic for the
+        algorithm
     */
 
-    use std::collections::HashMap;
     let mut map = HashMap::new();
 
     // Base for the numerical system
