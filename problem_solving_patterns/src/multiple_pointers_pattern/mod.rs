@@ -5,3 +5,4 @@
 /// without having to loop through the collection multiple times
 pub mod average_pair;
 pub mod count_unique;
+pub mod is_subsequence;
