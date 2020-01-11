@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::hash::Hash;
 
-/// ## Are There Duplicates Challenge
+/// ## Are there Duplicates Challenge
 /// Given a collection of arguments, identify if there are any duplicates in the collection
 ///
 /// ```
