@@ -5,7 +5,7 @@
 /// ```
 /// use problem_solving_patterns::recursion::power::recursive_power;
 ///
-/// fn test_valid_substring() {
+/// fn test_simple_power() {
 ///     let result = recursive_power(2, 2);
 ///     assert_eq!(result, 4);
 /// }

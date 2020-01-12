@@ -12,21 +12,17 @@
 /// ```
 pub fn max_array_sum(collection: &[i32], number_of_elements_to_use: usize) -> i32 {
     if collection.is_empty()
-        || number_of_elements_to_use <= 0
+        || number_of_elements_to_use == 0
         || number_of_elements_to_use > collection.len()
     {
         return 0;
     }
 
-    let mut pointer = 0;
-
     let mut temp_sum: i32 = collection.iter().take(number_of_elements_to_use).sum();
-    let mut max_sum = temp_sum.clone();
+    let mut max_sum = temp_sum;
 
-    for i in 0..collection.len() - number_of_elements_to_use {
-        temp_sum = temp_sum + collection[number_of_elements_to_use + i] - collection[pointer];
-        pointer += 1;
-
+    for (_, i) in (0..collection.len() - number_of_elements_to_use).enumerate() {
+        temp_sum = temp_sum + collection[number_of_elements_to_use + i] - collection[i];
         if temp_sum > max_sum {
             max_sum = temp_sum;
         }
