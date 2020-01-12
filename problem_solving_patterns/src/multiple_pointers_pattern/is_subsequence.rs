@@ -16,7 +16,7 @@ use unicode_segmentation::UnicodeSegmentation;
 /// The solution below stays true to the design pattern specified, however given the specific way
 /// that the Rust language treats strings, there are likely easier ways of fulfilling this requirement.
 /// For example:
-/// ```ignore
+/// ```text
 /// if full_string.contains(sub_string.as_str()) {
 //        return true;
 //  }
