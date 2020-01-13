@@ -14,11 +14,18 @@ pub fn bubble_sort<T>(mut collection: Vec<T>) -> Vec<T>
 where
     T: PartialOrd + PartialEq,
 {
+    let mut no_swaps;
+
     for i in (0..collection.len()).rev() {
+        no_swaps = true;
         for j in 0..i {
             if collection[j] > collection[j + 1] {
                 collection.swap(j, j + 1);
+                no_swaps = false;
             }
+        }
+        if no_swaps {
+            break;
         }
     }
 
