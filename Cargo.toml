@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "problem_solving_patterns",
-    "searching"
+    "searching",
+    "sorting"
 ]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
