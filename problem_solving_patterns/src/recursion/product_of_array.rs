@@ -15,12 +15,11 @@ use std::ops::Mul;
 /// This has been implemented recusively inline with the challenge, however in reality
 /// something like this is much more effectively done with something like:
 ///
-/// ```rust
+/// ```text
 /// let product = collection.iter().fold(1i32, |a, &b| a * b);
 /// // or
 /// let product = collection.iter().product::<i32>();
 /// ```
-///
 ///
 pub fn recursive_array_product<T>(collection: &[T]) -> T
 where
