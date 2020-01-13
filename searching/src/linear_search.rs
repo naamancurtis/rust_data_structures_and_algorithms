@@ -3,7 +3,7 @@
 /// value resides.
 ///
 /// ```
-/// use sorting::linear_search::linear_search;
+/// use searching::linear_search::linear_search;
 ///
 /// fn test_simple_search() {
 ///     let result = linear_search(&vec![10, 15, 20, 25, 30], 15);
