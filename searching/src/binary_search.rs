@@ -4,6 +4,9 @@ use std::cmp::Ordering;
 /// Given a sorted collection and a value, parse the collection and return the index where that
 /// value resides.
 ///
+/// Time Complexity: O(log(n))
+/// Space Complexity: O(1)
+///
 /// ```
 /// use searching::binary_search::binary_search;
 ///

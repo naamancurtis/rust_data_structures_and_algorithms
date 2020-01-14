@@ -2,6 +2,9 @@
 /// Given a collection and a value, parse the collection and return the index where that
 /// value resides.
 ///
+/// Time Complexity: O(n)
+/// Space Complexity: O(n)
+///
 /// ```
 /// use searching::linear_search::linear_search;
 ///
