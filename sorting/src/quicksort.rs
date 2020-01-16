@@ -179,8 +179,21 @@ mod tests {
 }
 
 #[test]
-fn test_partition() {
+fn test_partition_odd() {
     let mut arr = [37, 45, 29, 8, 16, 29, 30];
+    partition(&mut arr, &|x, y| x.cmp(y));
+    for (index, el) in arr.iter().enumerate() {
+        match index.cmp(&5) {
+            Ordering::Greater => assert!(el.gt(&37)),
+            Ordering::Equal => assert!(el.eq(&37)),
+            Ordering::Less => assert!(el.lt(&37)),
+        }
+    }
+}
+
+#[test]
+fn test_partition_even() {
+    let mut arr = [37, 45, 29, 8, 16, 29, 30, 59];
     partition(&mut arr, &|x, y| x.cmp(y));
     for (index, el) in arr.iter().enumerate() {
         match index.cmp(&5) {
