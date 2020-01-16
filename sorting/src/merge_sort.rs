@@ -20,7 +20,7 @@
 /// ```
 pub fn recursive_merge_sort<T>(collection: &mut [T])
 where
-    T: Ord + PartialEq + Copy,
+    T: Ord + Copy,
 {
     if collection.len() > 1 {
         let (lhs, rhs) = collection.split_at_mut(collection.len() / 2);
@@ -44,7 +44,7 @@ where
 /// ```
 pub fn iterative_merge_sort<T>(collection: &mut [T])
 where
-    T: Ord + PartialEq + Copy,
+    T: Ord + Copy,
 {
     let length = collection.len();
     if length <= 1 {
@@ -70,7 +70,7 @@ where
 
 fn merge<T>(collection: &mut [T], sub_array_length: usize)
 where
-    T: Ord + PartialEq + Copy,
+    T: Ord + Copy,
 {
     if sub_array_length < 2 {
         return;
