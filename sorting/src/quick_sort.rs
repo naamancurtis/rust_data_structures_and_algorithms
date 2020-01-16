@@ -3,7 +3,7 @@
 //! Quick Sort is a Divide and Conquer algorithm. It picks an element as a pivot and partitions a given array around the picked pivot.
 //! It recursively applies the same partitioning logic to the partitioned arrays until the entire collection is sorted
 //!
-//! - Time Complexity: **O**(n _log_(n)) _average_ | Worst case **O**(n^2)
+//! - Time Complexity: Average: **O**(n _log_(n)) | Worst case **O**(n^2)
 //! - Space Complexity: **O**(_log_(n))
 //!
 //! Implementation is based off [Ironsort](https://github.com/kyrias/ironsort/) however it includes some optimisations:
