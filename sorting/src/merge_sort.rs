@@ -1,14 +1,14 @@
-/// ## Recursive Merge Sort
-/// Given an unsorted collection, return a sorted collection through the use of the
-/// merge sort algorithm.
+//! # Merge Sort
+//!
+//! Merge Sort is a Divide and Conquer algorithm. It divides input array in two halves, calls
+//! itself for the two halves and then merges the two sorted halves back together.
+//!
+//! - Time Complexity: **O**(n _log_(n))
+//! - Space Complexity: **O**(n)
+
+/// Recursive implementation of Merge Sort
 ///
-/// The collection is first split down into sub-arrays of length 0 or 1, which takes
-/// advantage of the fact that anything of length 0 or 1 is inherenetly sorted.
-/// The sub-arrays are then merged back together to reform the sorted array
-///
-/// Time Complexity: O(nlog(n))
-/// Space Complexity: O(n)
-///
+///  # Examples
 /// ```
 /// use sorting::merge_sort::recursive_merge_sort;
 ///
@@ -30,18 +30,9 @@ where
     }
 }
 
-/// ## Iterative Merge Sort
-/// Given an unsorted collection, return a sorted collection through the use of the
-/// merge sort algorithm.
+/// Iterative implementation of Merge Sort
 ///
-/// This version is slightly more efficient than the recursive merge sort, as it
-/// doesn't have the overhead of the additional function calls, however is slightly
-/// more complex to understand and reason. However in time and space complexity
-/// its more or less comparable.
-///
-/// Time Complexity: O(nlog(n))
-/// Space Complexity: O(n)
-///
+/// # Examples
 /// ```
 /// use sorting::merge_sort::iterative_merge_sort;
 ///
@@ -77,7 +68,7 @@ where
     }
 }
 
-pub fn merge<T>(collection: &mut [T], sub_array_length: usize)
+fn merge<T>(collection: &mut [T], sub_array_length: usize)
 where
     T: Ord + PartialEq + Copy,
 {
@@ -116,8 +107,12 @@ where
 }
 
 #[cfg(test)]
+extern crate rand;
+
+#[cfg(test)]
 mod recursive_tests {
     use super::*;
+    use rand::{self, Rng};
 
     #[test]
     fn test_semi_sorted() {
@@ -159,12 +154,34 @@ mod recursive_tests {
         let mut arr = vec![50, 75, 1, 1, 3, 4, 5, 6, 50];
         recursive_merge_sort(&mut arr);
         assert_eq!(arr, [1, 1, 3, 4, 5, 6, 50, 50, 75]);
+    }
+
+    #[test]
+    fn test_long_zeroes() {
+        let mut vec = vec![0u8; 10000];
+        recursive_merge_sort(&mut vec);
+        for i in 0..vec.len() - 1 {
+            assert!(vec[i] <= vec[i + 1])
+        }
+    }
+
+    #[test]
+    fn test_random() {
+        let mut rng = rand::thread_rng();
+        let mut vec = (0..10000)
+            .map(|x| x * rng.gen_range(-10, 10))
+            .collect::<Vec<i32>>();
+        recursive_merge_sort(&mut vec);
+        for i in 0..vec.len() - 1 {
+            assert!(vec[i] <= vec[i + 1])
+        }
     }
 }
 
 #[cfg(test)]
 mod iterative_tests {
     use super::*;
+    use rand::{self, Rng};
 
     #[test]
     fn test_semi_sorted() {
@@ -206,5 +223,26 @@ mod iterative_tests {
         let mut arr = vec![50, 75, 1, 1, 3, 4, 5, 6, 50];
         iterative_merge_sort(&mut arr);
         assert_eq!(arr, [1, 1, 3, 4, 5, 6, 50, 50, 75]);
+    }
+
+    #[test]
+    fn test_long_zeroes() {
+        let mut vec = vec![0u8; 10000];
+        iterative_merge_sort(&mut vec);
+        for i in 0..vec.len() - 1 {
+            assert!(vec[i] <= vec[i + 1])
+        }
+    }
+
+    #[test]
+    fn test_random() {
+        let mut rng = rand::thread_rng();
+        let mut vec = (0..10000)
+            .map(|x| x * rng.gen_range(-10, 10))
+            .collect::<Vec<i32>>();
+        iterative_merge_sort(&mut vec);
+        for i in 0..vec.len() - 1 {
+            assert!(vec[i] <= vec[i + 1])
+        }
     }
 }
