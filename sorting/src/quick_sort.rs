@@ -3,12 +3,12 @@
 //! Quick Sort is a Divide and Conquer algorithm. It picks an element as a pivot and partitions a given array around the picked pivot.
 //! It recursively applies the same partitioning logic to the partitioned arrays until the entire collection is sorted
 //!
-//! - Time Complexity: Average: **O**(n _log_(n) ) | Worst case **O**(n<sup>2</sup>) - _although Median of Three has been used to minimise this occurrence_
+//! - Time Complexity: Average: **O**( n _log_(n) ) | Worst case **O**(n<sup>2</sup>) - _although Median of Three has been used to minimise this occurrence_
 //! - Space Complexity: **O**( _log_(n) )
 //!
 //! Implementation is based off [Ironsort](https://github.com/kyrias/ironsort/) however it includes some optimisations:
-//! - __Median of Three__ pivot strategy too counter sorted/reverse-sorted input
-//! - __Min Array Length Cut-off__ to switch to a non-recursive sort _(Insertion Sort)_ when the length of the array drops below 10
+//! - __Median of Three pivot strategy__ - too counter sorted/reverse-sorted input
+//! - __Min array length cut-off__ - to switch to a non-recursive sort _(Insertion Sort)_ when the length of the array drops below 10
 
 use crate::insertion_sort::insertion_sort_by;
 use std::cmp;
@@ -188,10 +188,7 @@ mod tests {
         quick_sort(&mut vec);
 
         for i in 0..vec.len() - 1 {
-            match vec[i].cmp(&vec[i + 1]) {
-                Ordering::Less | Ordering::Equal => assert!(true),
-                _ => assert!(vec[i] <= vec[i + 1]),
-            }
+            assert!(vec[i] <= vec[i + 1]);
         }
     }
 }

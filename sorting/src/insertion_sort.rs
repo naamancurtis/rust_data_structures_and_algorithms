@@ -4,7 +4,7 @@
 //! sub-array into which elements are inserted.
 //!
 //! - Time Complexity: **O**(n<sup>2</sup>)
-//! - Space Complexity: **O**(_log_(n))
+//! - Space Complexity: **O**( _log_(n) )
 
 use std::cmp::Ordering;
 
