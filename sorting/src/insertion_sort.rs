@@ -14,11 +14,9 @@ use std::cmp::Ordering;
 /// ```rust
 /// use sorting::insertion_sort::insertion_sort;
 ///
-/// fn test_simple_sort() {
-///     let mut arr = vec![37, 45, 29, 8];
-///     insertion_sort(&mut arr);
-///     assert_eq!(arr, [8, 29, 37, 45]);
-/// }
+/// let mut arr = vec![37, 45, 29, 8];
+/// insertion_sort(&mut arr);
+/// assert_eq!(arr, [8, 29, 37, 45]);
 /// ```
 pub fn insertion_sort<T>(arr: &mut [T])
 where
@@ -33,11 +31,9 @@ where
 /// ```rust
 /// use sorting::insertion_sort::insertion_sort_by;
 ///
-/// fn simple_sort() {
-///     let mut arr = vec![37, 45, 29, 8 ,10];
-///     insertion_sort_by(&mut arr, &|x, y| x.cmp(y));
-///     assert_eq!(arr, [8, 10, 29, 37, 45]);
-/// }
+/// let mut arr = vec![37, 45, 29, 8 ,10];
+/// insertion_sort_by(&mut arr, &|x, y| x.cmp(y));
+/// assert_eq!(arr, [8, 10, 29, 37, 45]);
 /// ```
 pub fn insertion_sort_by<T, F>(arr: &mut [T], cmp: &F)
 where

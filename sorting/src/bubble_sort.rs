@@ -10,14 +10,12 @@ use std::cmp::Ordering;
 
 /// Shorthand helper function which carries out sorting of a slice of `T` _where_ `T: Ord`
 ///
-/// ```
+/// ```rust
 /// use sorting::bubble_sort::bubble_sort;
 ///
-/// fn test_simple_sort() {
-///     let mut arr = vec![37, 45, 29, 8];
-///     bubble_sort(&mut arr);
-///     assert_eq!(arr, [8, 29, 37, 45]);
-/// }
+/// let mut arr = vec![37, 45, 29, 8];
+/// bubble_sort(&mut arr);
+/// assert_eq!(arr, [8, 29, 37, 45]);
 /// ```
 pub fn bubble_sort<T>(arr: &mut [T])
 where
@@ -28,14 +26,12 @@ where
 
 /// Carries out sorting of a slice of `T` using the provided comparator function `F`
 ///
-/// ```
+/// ```rust
 /// use sorting::bubble_sort::bubble_sort_by;
 ///
-/// fn test_simple_sort() {
-///     let mut arr = vec![37, 45, 29, 8];
-///     bubble_sort_by(&mut arr, &|x, y| x.cmp(y));
-///     assert_eq!(arr, [8, 29, 37, 45]);
-/// }
+/// let mut arr = vec![37, 45, 29, 8];
+/// bubble_sort_by(&mut arr, &|x, y| x.cmp(y));
+/// assert_eq!(arr, [8, 29, 37, 45]);
 /// ```
 pub fn bubble_sort_by<T, F>(arr: &mut [T], cmp: &F)
 where

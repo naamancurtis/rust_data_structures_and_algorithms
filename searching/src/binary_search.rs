@@ -1,19 +1,18 @@
 use std::cmp::Ordering;
 
-/// ## Binary Search Challenge
-/// Given a sorted collection and a value, parse the collection and return the index where that
-/// value resides.
+/// Given a sorted array and a value, this function parses the collection and returns the
+/// index where that value resides by performing a binary search.
 ///
-/// Time Complexity: O(log(n))
-/// Space Complexity: O(1)
+/// If the value is not present within the array `None` is returned
 ///
-/// ```
+/// - Time Complexity: **O**( _log_(n))
+/// - Space Complexity: **O**(1)
+///
+/// ```rust
 /// use searching::binary_search::binary_search;
 ///
-/// fn test_lower() {
-///     let result = binary_search(&vec![1, 2, 3, 4, 5], 2);
-///     assert_eq!(result, Some(1));
-/// }
+/// let result = binary_search(&vec![1, 2, 3, 4, 5], 2);
+/// assert_eq!(result, Some(1));
 /// ```
 pub fn binary_search<T>(collection: &[T], target_value: T) -> Option<usize>
 where

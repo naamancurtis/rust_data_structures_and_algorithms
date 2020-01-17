@@ -3,8 +3,8 @@
 //! Quick Sort is a Divide and Conquer algorithm. It picks an element as a pivot and partitions a given array around the picked pivot.
 //! It recursively applies the same partitioning logic to the partitioned arrays until the entire collection is sorted
 //!
-//! - Time Complexity: Average: **O**(n _log_(n)) | Worst case **O**(n^2)
-//! - Space Complexity: **O**(_log_(n))
+//! - Time Complexity: Average: **O**(n _log_(n) ) | Worst case **O**(n^2)
+//! - Space Complexity: **O**( _log_(n) )
 //!
 //! Implementation is based off [Ironsort](https://github.com/kyrias/ironsort/) however it includes some optimisations:
 //! - __Median of Three__ pivot strategy too counter sorted/reverse-sorted input
@@ -18,18 +18,16 @@ const INSERTION_SORT_CUT_OFF: usize = 10;
 
 /// Shorthand helper function which carries out in-place sorting of a slice of `T` _where_ `T: Ord`
 ///
-/// When any call to the function passes an array where `array.len() < 10` it instead
-/// defaults to using the insertion_sort defined in this library.
+/// When any call to the function provides an input array where `array.len() < 10` it instead
+/// defaults to using an insertion sort _(defined in this library)_ to carry out the sorting.
 ///
 /// # Examples
 /// ```rust
 /// use sorting::quick_sort::quick_sort;
 ///
-/// fn simple_sort() {
-///     let mut arr = vec![37, 45, 29, 8];
-///     quick_sort(&mut arr);
-///     assert_eq!(arr, [8, 29, 37, 45]);
-/// }
+/// let mut arr = vec![37, 45, 29, 8];
+/// quick_sort(&mut arr);
+/// assert_eq!(arr, [8, 29, 37, 45]);
 /// ```
 pub fn quick_sort<T>(arr: &mut [T])
 where
@@ -40,18 +38,16 @@ where
 
 /// Carries out in-place sorting of a slice of `T` using the provided comparator function `F`
 ///
-/// When any call to the function passes an array where `array.len() < 10` it instead
-/// defaults to using the insertion_sort defined in this library.
+/// When any call to the function provides an input array where `array.len() < 10` it instead
+/// defaults to using an insertion sort _(defined in this library)_ to carry out the sorting.
 ///
 /// # Examples
 /// ```rust
 /// use sorting::quick_sort::quick_sort_by;
 ///
-/// fn simple_sort() {
-///     let mut arr = vec![37, 45, 29, 8 ,10];
-///     quick_sort_by(&mut arr, &|x, y| x.cmp(y));
-///     assert_eq!(arr, [8, 10, 29, 37, 45]);
-/// }
+/// let mut arr = vec![37, 45, 29, 8 ,10];
+/// quick_sort_by(&mut arr, &|x, y| x.cmp(y));
+/// assert_eq!(arr, [8, 10, 29, 37, 45]);
 /// ```
 pub fn quick_sort_by<T, F>(arr: &mut [T], cmp: &F)
 where
@@ -79,21 +75,7 @@ where
     let start = 0;
     let pivot = 0;
 
-    {
-        // Median of Three
-        let end = len - 1;
-        let mid = end / 2;
-
-        if cmp(&arr[mid], &arr[start]) == Ordering::Less {
-            arr.swap(mid, start);
-        }
-        if cmp(&arr[end], &arr[start]) == Ordering::Less {
-            arr.swap(end, start);
-        }
-        if cmp(&arr[end], &arr[mid]) == Ordering::Less {
-            arr.swap(end, mid);
-        }
-    }
+    median_of_three(arr, cmp, start, len - 1);
 
     let mut left_ptr = 1;
     let mut right_ptr = arr.len() - 1;
@@ -125,7 +107,7 @@ where
     }
 
     // Once we've broken out of the loop, the right_ptr points to a value lower than the pivot
-    // Our pivot value was held in the [0] index of the collection, therefore we can swap the
+    // Our pivot value was held at the end of the collection, therefore we can swap the
     // two to complete this iteration of the sort
     arr.swap(pivot, right_ptr);
 
@@ -202,9 +184,53 @@ mod tests {
         let mut vec = (0..10000)
             .map(|x| x * rng.gen_range(-10, 10))
             .collect::<Vec<i32>>();
+
         quick_sort(&mut vec);
+
         for i in 0..vec.len() - 1 {
-            assert!(vec[i] <= vec[i + 1])
+            match vec[i].cmp(&vec[i + 1]) {
+                Ordering::Less | Ordering::Equal => assert!(true),
+                _ => assert!(vec[i] <= vec[i + 1]),
+            }
         }
     }
+}
+
+/// This function takes 3 values in the array _(start, middle & end)_ and works out
+/// the median of those 3 values, swapping it to index 0 in the array
+fn median_of_three<T, F>(arr: &mut [T], cmp: &F, start: usize, end: usize)
+where
+    F: Fn(&T, &T) -> Ordering,
+{
+    let mid = start + (end - start) / 2;
+    if cmp(&arr[end], &arr[start]) == Ordering::Less {
+        arr.swap(end, start);
+    }
+    if cmp(&arr[end], &arr[mid]) == Ordering::Less {
+        arr.swap(end, mid);
+    }
+    if cmp(&arr[start], &arr[mid]) == Ordering::Less {
+        arr.swap(mid, start);
+    }
+}
+
+#[test]
+fn test_median_first() {
+    let mut arr = vec![3, 5, 1, 7, 6];
+    median_of_three(&mut arr, &|x, y| x.cmp(y), 0, 4);
+    assert_eq!(arr[0], 3)
+}
+
+#[test]
+fn test_median_mid() {
+    let mut arr = vec![1, 5, 3, 7, 6];
+    median_of_three(&mut arr, &|x, y| x.cmp(y), 0, 4);
+    assert_eq!(arr[0], 3)
+}
+
+#[test]
+fn test_median_last() {
+    let mut arr = vec![1, 5, 6, 7, 3];
+    median_of_three(&mut arr, &|x, y| x.cmp(y), 0, 4);
+    assert_eq!(arr[0], 3)
 }

@@ -3,7 +3,7 @@
 //! Merge Sort is a Divide and Conquer algorithm. It divides input array in two halves, calls
 //! itself for the two halves and then merges the two sorted halves back together.
 //!
-//! - Time Complexity: **O**(n _log_(n))
+//! - Time Complexity: **O**(n _log_(n) )
 //! - Space Complexity: **O**(n)
 
 /// Recursive implementation of Merge Sort
@@ -12,11 +12,9 @@
 /// ```
 /// use sorting::merge_sort::recursive_merge_sort;
 ///
-/// fn simple_recursive_sort() {
-///     let mut arr = vec![37, 45, 29, 8];
-///     recursive_merge_sort(&mut arr);
-///     assert_eq!(arr, [8, 29, 37, 45]);
-/// }
+/// let mut arr = vec![37, 45, 29, 8];
+/// recursive_merge_sort(&mut arr);
+/// assert_eq!(arr, [8, 29, 37, 45]);
 /// ```
 pub fn recursive_merge_sort<T>(collection: &mut [T])
 where
@@ -36,11 +34,9 @@ where
 /// ```
 /// use sorting::merge_sort::iterative_merge_sort;
 ///
-/// fn simple_iterative_sort() {
-///     let mut arr = vec![37, 45, 29, 8];
-///     iterative_merge_sort(&mut arr);
-///     assert_eq!(arr, [8, 29, 37, 45]);
-/// }
+/// let mut arr = vec![37, 45, 29, 8];
+/// iterative_merge_sort(&mut arr);
+/// assert_eq!(arr, [8, 29, 37, 45]);
 /// ```
 pub fn iterative_merge_sort<T>(collection: &mut [T])
 where

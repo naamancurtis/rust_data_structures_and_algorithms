@@ -1,17 +1,16 @@
-/// ## Linear Search Challenge
-/// Given a collection and a value, parse the collection and return the index where that
-/// value resides.
+/// Given a sorted array and a value, this function parses the collection and returns the
+/// index where that value resides via a linear search
 ///
-/// Time Complexity: O(n)
-/// Space Complexity: O(n)
+/// If the value is not present within the array `None` is returned
 ///
-/// ```
+/// - Time Complexity: **O**(n)
+/// - Space Complexity: **O**(1)
+///
+/// ```rust
 /// use searching::linear_search::linear_search;
 ///
-/// fn test_simple_search() {
-///     let result = linear_search(&vec![10, 15, 20, 25, 30], 15);
-///     assert_eq!(result, Some(1));
-/// }
+/// let result = linear_search(&vec![10, 15, 20, 25, 30], 15);
+/// assert_eq!(result, Some(1));
 /// ```
 pub fn linear_search<T>(collection: &[T], target_value: T) -> Option<usize>
 where

@@ -13,11 +13,9 @@ use std::cmp::Ordering;
 /// ```
 /// use sorting::selection_sort::selection_sort;
 ///
-/// fn test_simple_sort() {
-///     let mut arr = vec![37, 45, 29, 8];
-///     selection_sort(&mut arr);
-///     assert_eq!(arr, [8, 29, 37, 45]);
-/// }
+/// let mut arr = vec![37, 45, 29, 8];
+/// selection_sort(&mut arr);
+/// assert_eq!(arr, [8, 29, 37, 45]);
 /// ```
 pub fn selection_sort<T>(arr: &mut [T])
 where
@@ -31,11 +29,9 @@ where
 /// ```
 /// use sorting::selection_sort::selection_sort_by;
 ///
-/// fn test_simple_sort() {
-///     let mut arr = vec![37, 45, 29, 8];
-///     selection_sort_by(&mut arr, &|x, y| x.cmp(y));
-///     assert_eq!(arr, [8, 29, 37, 45]);
-/// }
+/// let mut arr = vec![37, 45, 29, 8];
+/// selection_sort_by(&mut arr, &|x, y| x.cmp(y));
+/// assert_eq!(arr, [8, 29, 37, 45]);
 /// ```
 pub fn selection_sort_by<T, F>(arr: &mut [T], cmp: &F)
 where
