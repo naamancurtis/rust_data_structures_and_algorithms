@@ -6,7 +6,9 @@
 //! - Time Complexity: **O**(n _log_(n) )
 //! - Space Complexity: **O**(n)
 
-/// Recursive implementation of Merge Sort
+use std::cmp::Ordering;
+
+/// Shorthand helper function which carries out sorting of a slice of `T` _where_ `T: Ord` recursively
 ///
 ///  # Examples
 /// ```
@@ -16,21 +18,39 @@
 /// recursive_merge_sort(&mut arr);
 /// assert_eq!(arr, [8, 29, 37, 45]);
 /// ```
-pub fn recursive_merge_sort<T>(collection: &mut [T])
+pub fn recursive_merge_sort<T>(arr: &mut [T])
 where
-    T: Ord + Copy,
+    T: Copy + Ord,
 {
-    if collection.len() > 1 {
-        let (lhs, rhs) = collection.split_at_mut(collection.len() / 2);
-        recursive_merge_sort(lhs);
-        recursive_merge_sort(rhs);
-        merge(collection, collection.len())
+    recursive_merge_sort_by(arr, &|x, y| x.cmp(y))
+}
+
+/// Carries out sorting of a slice of `T` using the provided comparator function `F` recursively
+///
+///  # Examples
+/// ```
+/// use sorting::merge_sort::recursive_merge_sort_by;
+///
+/// let mut arr = vec![37, 45, 29, 8];
+/// recursive_merge_sort_by(&mut arr, &|x, y| x.cmp(y));
+/// assert_eq!(arr, [8, 29, 37, 45]);
+/// ```
+pub fn recursive_merge_sort_by<T, F>(arr: &mut [T], cmp: &F)
+where
+    T: Copy,
+    F: Fn(&T, &T) -> Ordering,
+{
+    if arr.len() > 1 {
+        let (lhs, rhs) = arr.split_at_mut(arr.len() / 2);
+        recursive_merge_sort_by(lhs, cmp);
+        recursive_merge_sort_by(rhs, cmp);
+        merge(arr, cmp, arr.len())
     }
 }
 
-/// Iterative implementation of Merge Sort
+/// Shorthand helper function which carries out sorting of a slice of `T` _where_ `T: Ord` iteratively
 ///
-/// # Examples
+///  # Examples
 /// ```
 /// use sorting::merge_sort::iterative_merge_sort;
 ///
@@ -38,11 +58,29 @@ where
 /// iterative_merge_sort(&mut arr);
 /// assert_eq!(arr, [8, 29, 37, 45]);
 /// ```
-pub fn iterative_merge_sort<T>(collection: &mut [T])
+pub fn iterative_merge_sort<T>(arr: &mut [T])
 where
-    T: Ord + Copy,
+    T: Copy + Ord,
 {
-    let length = collection.len();
+    iterative_merge_sort_by(arr, &|x, y| x.cmp(y))
+}
+
+/// Carries out sorting of a slice of `T` using the provided comparator function `F` iteratively
+///
+/// # Examples
+/// ```
+/// use sorting::merge_sort::iterative_merge_sort_by;
+///
+/// let mut arr = vec![37, 45, 29, 8];
+/// iterative_merge_sort_by(&mut arr, &|x, y| x.cmp(y));
+/// assert_eq!(arr, [8, 29, 37, 45]);
+/// ```
+pub fn iterative_merge_sort_by<T, F>(arr: &mut [T], cmp: &F)
+where
+    T: Copy,
+    F: Fn(&T, &T) -> Ordering,
+{
+    let length = arr.len();
     if length <= 1 {
         return;
     }
@@ -51,9 +89,8 @@ where
     let mut current_sub_array_size = 2;
 
     loop {
-        collection
-            .chunks_mut(current_sub_array_size)
-            .for_each(|sub_arr| merge(sub_arr, current_sub_array_size));
+        arr.chunks_mut(current_sub_array_size)
+            .for_each(|sub_arr| merge(sub_arr, cmp, current_sub_array_size));
 
         if current_sub_array_size > length {
             break;
@@ -64,9 +101,10 @@ where
     }
 }
 
-fn merge<T>(collection: &mut [T], sub_array_length: usize)
+fn merge<T, F>(collection: &mut [T], cmp: &F, sub_array_length: usize)
 where
-    T: Ord + Copy,
+    T: Copy,
+    F: Fn(&T, &T) -> Ordering,
 {
     if sub_array_length < 2 {
         return;
@@ -79,7 +117,7 @@ where
         let mut rhs = collection.iter().skip(mid).peekable();
 
         while let (Some(&lhs_el), Some(&rhs_el)) = (lhs.peek(), rhs.peek()) {
-            if *lhs_el <= *rhs_el {
+            if cmp(lhs_el, rhs_el) != Ordering::Greater {
                 temp_vec.push(*lhs.next().unwrap())
             } else {
                 temp_vec.push(*rhs.next().unwrap())

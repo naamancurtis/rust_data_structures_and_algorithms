@@ -3,7 +3,7 @@
 //! Is a simple sorting algorithm that builds the sorted array one element at a time by maintaining a sorted
 //! sub-array into which elements are inserted.
 //!
-//! - Time Complexity: **O**(n^2)
+//! - Time Complexity: **O**(n<sup>2</sup>)
 //! - Space Complexity: **O**(_log_(n))
 
 use std::cmp::Ordering;

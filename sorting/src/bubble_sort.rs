@@ -3,7 +3,7 @@
 //! Bubble Sort is a simple sorting algorithm that works by repeatedly swapping adjacent
 //! elements if they are in the wrong order
 //!
-//! - Time Complexity: **O**(n^2)
+//! - Time Complexity: **O**(n<sup>2</sup>)
 //! - Space Complexity: **O**(1)
 
 use std::cmp::Ordering;

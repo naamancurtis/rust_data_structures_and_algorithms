@@ -3,7 +3,7 @@
 //! Quick Sort is a Divide and Conquer algorithm. It picks an element as a pivot and partitions a given array around the picked pivot.
 //! It recursively applies the same partitioning logic to the partitioned arrays until the entire collection is sorted
 //!
-//! - Time Complexity: Average: **O**(n _log_(n) ) | Worst case **O**(n^2)
+//! - Time Complexity: Average: **O**(n _log_(n) ) | Worst case **O**(n<sup>2</sup>) - _although Median of Three has been used to minimise this occurrence_
 //! - Space Complexity: **O**( _log_(n) )
 //!
 //! Implementation is based off [Ironsort](https://github.com/kyrias/ironsort/) however it includes some optimisations:
@@ -196,8 +196,10 @@ mod tests {
     }
 }
 
-/// This function takes 3 values in the array _(start, middle & end)_ and works out
-/// the median of those 3 values, swapping it to index 0 in the array
+/// This function takes looks at 3 elements within an array at indexes
+/// `start`, `end` and _(mid - calculated `start - end / 2`)_ and
+/// identifies the median of those 3 elements, swapping that median to
+/// index `[0]` in the array
 fn median_of_three<T, F>(arr: &mut [T], cmp: &F, start: usize, end: usize)
 where
     F: Fn(&T, &T) -> Ordering,

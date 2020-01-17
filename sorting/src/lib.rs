@@ -9,8 +9,8 @@
 //!
 //! ## Advanced Sorts
 //! - Merge Sort
-//!     - Iterative
-//!     - Recursive
+//!     - _Iterative_
+//!     - _Recursive_
 //! - Quick Sort
 
 pub mod bubble_sort;
