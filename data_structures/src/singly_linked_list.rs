@@ -8,18 +8,11 @@
 //!
 //! In the implementation below, the use-case of a Singly-Linked Stack is used as a problem to solve
 
-use std::mem;
-
-#[derive(Debug)]
 pub struct List<T> {
     head: Link<T>,
 }
 
-#[derive(Debug)]
-enum Link<T> {
-    Empty,
-    More(Box<Node<T>>),
-}
+type Link<T> = Option<Box<Node<T>>>;
 
 #[derive(Debug)]
 struct Node<T> {
@@ -29,34 +22,104 @@ struct Node<T> {
 
 impl<T> List<T> {
     pub fn new() -> Self {
-        Self { head: Link::Empty }
+        Self { head: None }
     }
 
     pub fn push(&mut self, elem: T) {
         let new_node = Box::new(Node {
             data: elem,
-            next: mem::replace(&mut self.head, Link::Empty),
+            next: self.head.take(),
         });
-        self.head = Link::More(new_node);
+        self.head = Some(new_node);
     }
 
     pub fn pop(&mut self) -> Option<T> {
-        match mem::replace(&mut self.head, Link::Empty) {
-            Link::Empty => None,
-            Link::More(node) => {
-                self.head = node.next;
-                Some(node.data)
-            }
-        }
+        self.head.take().map(|node| {
+            self.head = node.next;
+            node.data
+        })
+    }
+
+    pub fn peek(&self) -> Option<&T> {
+        self.head.as_ref().map(|node| &node.data)
+    }
+
+    pub fn peek_mut(&mut self) -> Option<&mut T> {
+        self.head.as_mut().map(|node| &mut node.data)
     }
 }
 
 impl<T> Drop for List<T> {
     fn drop(&mut self) {
-        let mut current_link = mem::replace(&mut self.head, Link::Empty);
-        while let Link::More(mut boxed_node) = current_link {
-            current_link = mem::replace(&mut boxed_node.next, Link::Empty)
+        let mut current_link = self.head.take();
+        while let Some(mut boxed_node) = current_link {
+            current_link = boxed_node.next.take();
         }
+    }
+}
+
+// Wrapper around List<T>
+pub struct IntoIter<T>(List<T>);
+
+impl<T> List<T> {
+    pub fn into_iter(self) -> IntoIter<T> {
+        IntoIter(self)
+    }
+}
+
+impl<T> Iterator for IntoIter<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.pop()
+    }
+}
+
+pub struct Iter<'a, T> {
+    next: Option<&'a Node<T>>,
+}
+
+impl<T> List<T> {
+    pub fn iter(&self) -> Iter<T> {
+        Iter {
+            // One option is to double de-ref the node to help the compiler out
+            // The other option (seen below) is to turbofish the .map with expected types
+            next: self.head.as_ref().map(|node| &**node),
+        }
+    }
+}
+
+impl<'a, T> Iterator for Iter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.next.map(|node| {
+            self.next = node.next.as_ref().map::<&Node<T>, _>(|node| &node);
+            &node.data
+        })
+    }
+}
+
+pub struct IterMut<'a, T> {
+    next: Option<&'a mut Node<T>>,
+}
+
+impl<T> List<T> {
+    pub fn iter_mut(&mut self) -> IterMut<'_, T> {
+        IterMut {
+            next: self.head.as_mut().map(|node| &mut **node),
+        }
+    }
+}
+
+impl<'a, T> Iterator for IterMut<'a, T> {
+    type Item = &'a mut T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.next.take().map(|node| {
+            self.next = node.next.as_mut().map(|node| &mut **node);
+            &mut node.data
+        })
     }
 }
 
@@ -71,7 +134,7 @@ mod tests {
     }
 
     #[test]
-    fn list_can_push_and_pop() {
+    fn test_push_and_pop() {
         let mut list = List::new();
         list.push(1);
         list.push(2);
@@ -88,5 +151,66 @@ mod tests {
 
         assert_eq!(list.pop(), Some(1));
         assert_eq!(list.pop(), None);
+    }
+
+    #[test]
+    fn test_peek() {
+        let mut list = List::new();
+        assert_eq!(list.peek(), None);
+        assert_eq!(list.peek_mut(), None);
+
+        list.push(1);
+        list.push(2);
+        list.push(3);
+
+        assert_eq!(list.peek(), Some(&3));
+        assert_eq!(list.peek_mut(), Some(&mut 3));
+
+        list.peek_mut().map(|val| *val = 42);
+
+        assert_eq!(list.peek(), Some(&42));
+        assert_eq!(list.pop(), Some(42));
+    }
+
+    #[test]
+    fn test_into_iter() {
+        let mut list = List::new();
+        list.push(1);
+        list.push(2);
+        list.push(3);
+
+        let mut iter = list.into_iter();
+        assert_eq!(iter.next(), Some(3));
+        assert_eq!(iter.next(), Some(2));
+        assert_eq!(iter.next(), Some(1));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn test_iter() {
+        let mut list = List::new();
+        list.push(1);
+        list.push(2);
+        list.push(3);
+
+        let mut iter = list.iter();
+        assert_eq!(iter.next(), Some(&3));
+        assert_eq!(iter.next(), Some(&2));
+        assert_eq!(iter.next(), Some(&1));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn test_iter_mut() {
+        let mut list = List::new();
+        list.push(1);
+        list.push(2);
+        list.push(3);
+
+        let mut iter = list.iter_mut();
+        assert_eq!(iter.next(), Some(&mut 3));
+        assert_eq!(iter.next(), Some(&mut 2));
+        assert_eq!(iter.next(), Some(&mut 1));
+        assert_eq!(iter.next(), None);
     }
 }
