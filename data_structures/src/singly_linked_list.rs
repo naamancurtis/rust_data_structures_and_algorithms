@@ -1,12 +1,10 @@
-//! # Singly Linked List
+//! # Singly Linked Stack - a FIFO Stack
 //!
 //! A singly linked list is a linear data structure where elements are linked to the next
-//! element through a pointer pointing directly to that node.
+//! element through a pointer pointing directly to that node. In order to interact with any element
+//! the list must be traversed head to tail - there is no random access.
 //!
-//! A singly linked list is not a _random access_ data structure, and must be traversed
-//! head to tail.
-//!
-//! In the implementation below, the use-case of a Singly-Linked Stack is used as a problem to solve
+//! Tutorial Used: https://rust-unofficial.github.io/too-many-lists/index.html
 
 pub struct List<T> {
     head: Link<T>,
@@ -14,7 +12,6 @@ pub struct List<T> {
 
 type Link<T> = Option<Box<Node<T>>>;
 
-#[derive(Debug)]
 struct Node<T> {
     data: T,
     next: Link<T>,
@@ -58,7 +55,8 @@ impl<T> Drop for List<T> {
     }
 }
 
-// Wrapper around List<T>
+// =========== IntoIter ===========
+
 pub struct IntoIter<T>(List<T>);
 
 impl<T> List<T> {
@@ -75,6 +73,10 @@ impl<T> Iterator for IntoIter<T> {
     }
 }
 
+// =========== /IntoIter ===========
+
+// =========== Iter ===========
+
 pub struct Iter<'a, T> {
     next: Option<&'a Node<T>>,
 }
@@ -82,8 +84,6 @@ pub struct Iter<'a, T> {
 impl<T> List<T> {
     pub fn iter(&self) -> Iter<T> {
         Iter {
-            // One option is to double de-ref the node to help the compiler out
-            // The other option (seen below) is to turbofish the .map with expected types
             next: self.head.as_ref().map(|node| &**node),
         }
     }
@@ -99,6 +99,10 @@ impl<'a, T> Iterator for Iter<'a, T> {
         })
     }
 }
+
+// =========== /Iter ===========
+
+// =========== IterMut ===========
 
 pub struct IterMut<'a, T> {
     next: Option<&'a mut Node<T>>,
@@ -122,6 +126,8 @@ impl<'a, T> Iterator for IterMut<'a, T> {
         })
     }
 }
+
+// =========== /IterMut ===========
 
 #[cfg(test)]
 mod tests {
