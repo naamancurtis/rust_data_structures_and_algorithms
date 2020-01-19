@@ -49,8 +49,8 @@ mod factorial_tests {
     }
 }
 
-/// Write out a function that accepts a number and returns the nth number in the
-/// Fibonacci sequence.
+/// Write out a function that accepts a number and returns the n<sup>th</sup> number in the
+/// Fibonacci sequence
 ///
 /// # Examples
 /// ```rust
@@ -90,7 +90,7 @@ mod fibonacci_tests {
 }
 
 /// Write out a function that takes two positive integers, a base and an exponent, and recursively
-/// calculates the power of the base to the exponent.
+/// calculates the power of the base to the exponent
 ///
 /// # Examples
 /// ```rust
