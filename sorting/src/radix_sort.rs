@@ -12,11 +12,11 @@
 //!     - `b` _is the numerical base of the number_
 //!     - As such, in the event that `d` is constant and `b` isn't much greater than `n`, the sort can be carried out in approximately linear time
 //!
-//! - Space Complexity: **O**( _log_(n) )
+//! - Space Complexity: **O**( bn )
 
 const NUMERICAL_BASE: u32 = 10;
 
-/// Takes a Vec<u32> and returns a Vec<u32> sorted in ascending order
+/// Takes a `Vec<u32>` and returns a `Vec<u32>` sorted in ascending order
 ///
 /// Sorting occurs without comparison between numbers
 ///
@@ -26,8 +26,10 @@ const NUMERICAL_BASE: u32 = 10;
 ///
 /// let arr = vec![10, 20, 1, 3, 50, 30, 39, 2783, 9539, 2303, 1283, 2, 3, 6, 50];
 /// let mut expected = arr.clone();
+///
 /// expected.sort();
 /// let result = radix_sort(arr);
+///
 /// assert_eq!(result, expected)
 /// ```
 pub fn radix_sort(mut arr: Vec<u32>) -> Vec<u32> {
@@ -42,8 +44,7 @@ pub fn radix_sort(mut arr: Vec<u32>) -> Vec<u32> {
         let mut buckets: Vec<Vec<u32>> = vec![Vec::with_capacity(arr.len() / 2); 10];
 
         arr.iter().for_each(|digit| {
-            // Work out how many times we will need to loop over this array in order to cover all numbers
-            // this only needs to be done once
+            // On the first iteration of the loop, work out the largest digit number in the array
             if i == 0 {
                 let digit_count = digit_count(*digit);
                 if digit_count > max_digit_count {
