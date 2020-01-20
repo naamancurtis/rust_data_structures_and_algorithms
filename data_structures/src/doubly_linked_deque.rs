@@ -154,7 +154,7 @@ mod test {
     use super::List;
 
     #[test]
-    fn test_basic_push_pop_front() {
+    fn push_pop_front() {
         let mut list = List::new();
 
         // Check empty list behaves right
@@ -183,7 +183,7 @@ mod test {
     }
 
     #[test]
-    fn test_basic_push_pop_back() {
+    fn push_pop_back() {
         let mut list = List::new();
 
         // Check empty list behaves right
@@ -212,7 +212,7 @@ mod test {
     }
 
     #[test]
-    fn test_peek() {
+    fn peek() {
         let mut list = List::new();
         assert!(list.peek_front().is_none());
         assert!(list.peek_back().is_none());
@@ -230,7 +230,7 @@ mod test {
     }
 
     #[test]
-    fn test_into_iter() {
+    fn into_iter() {
         let mut list = List::new();
         list.push_front(1);
         list.push_front(2);

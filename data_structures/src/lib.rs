@@ -9,3 +9,4 @@
 pub mod doubly_linked_deque;
 pub mod persistent_stack;
 pub mod singly_linked_stack;
+pub mod unsafe_singly_linked_queue;

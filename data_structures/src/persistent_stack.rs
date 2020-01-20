@@ -88,7 +88,7 @@ mod test {
     use super::List;
 
     #[test]
-    fn test_basic_append_tail() {
+    fn append_tail() {
         let list = List::new();
         assert_eq!(list.head(), None);
 
@@ -110,7 +110,7 @@ mod test {
     }
 
     #[test]
-    fn test_iter() {
+    fn iter() {
         let list = List::new().append(1).append(2).append(3);
 
         let mut iter = list.iter();
