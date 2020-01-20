@@ -3,6 +3,8 @@
 //! This library contains practice implementations of various data structures
 //!
 //! ## Lists
-//! - Singularly Linked List
+//! - Singularly Linked Stack
+//! - Persistent Stack
 
-pub mod singly_linked_list;
+pub mod persistent_stack;
+pub mod singly_linked_stack;

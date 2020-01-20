@@ -1,8 +1,11 @@
-//! # Singly Linked Stack - a FIFO Stack
+//! # Singly Linked Stack - a LIFO Stack
 //!
-//! A singly linked list is a linear data structure where elements are linked to the next
+//! A singly linked stack is a linear data structure where elements are linked to the next
 //! element through a pointer pointing directly to that node. In order to interact with any element
 //! the list must be traversed head to tail - there is no random access.
+//!
+//! This simple stack implementation operates solely on a last in, first out access principles
+//! where only a reference to the **Head** is stored.
 //!
 //! Tutorial Used: https://rust-unofficial.github.io/too-many-lists/index.html
 
