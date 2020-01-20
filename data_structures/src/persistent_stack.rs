@@ -1,6 +1,6 @@
-//! # Persistent Stack
+//! # Persistent Stack - _Shared Ownership_
 //!
-//! This persistent stack moves from a single ownership model _(which our `Singly Linked Stack`)_
+//! This persistent stack moves from a single ownership model _(see `Singly Linked Stack`)_
 //! leveraged, to a shared ownership model.
 //!
 //! Tutorial Used: https://rust-unofficial.github.io/too-many-lists/index.html

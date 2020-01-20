@@ -1,11 +1,11 @@
-//! # Singly Linked Stack - a LIFO Stack
+//! # Singly Linked Stack - _Single Ownership_
 //!
 //! A singly linked stack is a linear data structure where elements are linked to the next
 //! element through a pointer pointing directly to that node. In order to interact with any element
 //! the list must be traversed head to tail - there is no random access.
 //!
-//! When we add a new item to the stack, it is added to the head of the Stack, when we pop an item
-//! off the Stack, we pop it off the head of the stack.
+//! When we add a new item to the stack, it is added to the head of the stack, when we pop an item
+//! off the stack, we pop it off the head of the stack.
 //!
 //! Tutorial Used: https://rust-unofficial.github.io/too-many-lists/index.html
 
@@ -49,6 +49,24 @@ impl<T> List<T> {
     }
 }
 
+impl<T> List<T> {
+    pub fn into_iter(self) -> IntoIter<T> {
+        IntoIter(self)
+    }
+
+    pub fn iter(&self) -> Iter<T> {
+        Iter {
+            next: self.head.as_ref().map(|node| &**node),
+        }
+    }
+
+    pub fn iter_mut(&mut self) -> IterMut<'_, T> {
+        IterMut {
+            next: self.head.as_mut().map(|node| &mut **node),
+        }
+    }
+}
+
 impl<T> Drop for List<T> {
     fn drop(&mut self) {
         let mut current_link = self.head.take();
@@ -61,12 +79,6 @@ impl<T> Drop for List<T> {
 // =========== IntoIter ===========
 
 pub struct IntoIter<T>(List<T>);
-
-impl<T> List<T> {
-    pub fn into_iter(self) -> IntoIter<T> {
-        IntoIter(self)
-    }
-}
 
 impl<T> Iterator for IntoIter<T> {
     type Item = T;
@@ -82,14 +94,6 @@ impl<T> Iterator for IntoIter<T> {
 
 pub struct Iter<'a, T> {
     next: Option<&'a Node<T>>,
-}
-
-impl<T> List<T> {
-    pub fn iter(&self) -> Iter<T> {
-        Iter {
-            next: self.head.as_ref().map(|node| &**node),
-        }
-    }
 }
 
 impl<'a, T> Iterator for Iter<'a, T> {
@@ -109,14 +113,6 @@ impl<'a, T> Iterator for Iter<'a, T> {
 
 pub struct IterMut<'a, T> {
     next: Option<&'a mut Node<T>>,
-}
-
-impl<T> List<T> {
-    pub fn iter_mut(&mut self) -> IterMut<'_, T> {
-        IterMut {
-            next: self.head.as_mut().map(|node| &mut **node),
-        }
-    }
 }
 
 impl<'a, T> Iterator for IterMut<'a, T> {

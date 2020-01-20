@@ -1,3 +1,9 @@
+//! # Singly Linked Queue - _Unsafe_
+//!
+//! This doubly ended queue allows data to be added or removed from either end of the queue
+//!
+//! Tutorial Used: https://rust-unofficial.github.io/too-many-lists/index.html
+
 use std::ptr;
 
 pub struct List<T> {

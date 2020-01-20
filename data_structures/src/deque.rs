@@ -1,3 +1,9 @@
+//! # Deque
+//!
+//! This doubly ended queue allows data to be added or removed from either end of the queue
+//!
+//! Tutorial Used: https://rust-unofficial.github.io/too-many-lists/index.html
+
 use std::cell::{Ref, RefCell, RefMut};
 use std::rc::Rc;
 
@@ -52,18 +58,6 @@ impl<T> List<T> {
         })
     }
 
-    pub fn peek_front(&self) -> Option<Ref<T>> {
-        self.head
-            .as_ref()
-            .map(|node| Ref::map(node.borrow(), |node| &node.data))
-    }
-
-    pub fn peek_front_mut(&mut self) -> Option<RefMut<T>> {
-        self.head
-            .as_ref()
-            .map(|node| RefMut::map(node.borrow_mut(), |node| &mut node.data))
-    }
-
     pub fn push_back(&mut self, data: T) {
         let new_tail = Node::new(data);
         match self.tail.take() {
@@ -94,6 +88,18 @@ impl<T> List<T> {
         })
     }
 
+    pub fn peek_front(&self) -> Option<Ref<T>> {
+        self.head
+            .as_ref()
+            .map(|node| Ref::map(node.borrow(), |node| &node.data))
+    }
+
+    pub fn peek_front_mut(&mut self) -> Option<RefMut<T>> {
+        self.head
+            .as_ref()
+            .map(|node| RefMut::map(node.borrow_mut(), |node| &mut node.data))
+    }
+
     pub fn peek_back(&mut self) -> Option<Ref<T>> {
         self.tail
             .as_ref()
@@ -104,6 +110,10 @@ impl<T> List<T> {
         self.tail
             .as_ref()
             .map(|node| RefMut::map(node.borrow_mut(), |node| &mut node.data))
+    }
+
+    pub fn into_iter(self) -> IntoIter<T> {
+        IntoIter(self)
     }
 }
 
@@ -116,12 +126,6 @@ impl<T> Drop for List<T> {
 // =========== IntoIter ===========
 
 pub struct IntoIter<T>(List<T>);
-
-impl<T> List<T> {
-    pub fn into_iter(self) -> IntoIter<T> {
-        IntoIter(self)
-    }
-}
 
 impl<T> Iterator for IntoIter<T> {
     type Item = T;
