@@ -1,3 +1,59 @@
+/// # Safe implementation of a single ownership Singly Linked List
+///
+/// This list maintains a pointer to the element at the *head* of the list, where each element
+/// maintains a subsequent pointer to the next element in the list. Interactions should ideally be
+/// kept at the head level where this list can operate in O(1) time.
+///
+/// Any traversal required within the list is highly inefficient given the nature of it
+/// _(although it is offered, primarily through the use of rust iterators)_.
+///
+/// # Examples
+///
+/// ```rust
+/// use data_structures::singly_linked_list::SinglyLinkedList;
+///
+/// let mut list = SinglyLinkedList::new();
+/// list.push(10);
+/// list.push(20);
+/// list.push(30); // <- This is our head
+///
+/// assert_eq!(list.len(), 3);
+///
+/// let element = list.pop(); // We pop the head off the list
+/// assert_eq!(element, Some(30));
+/// assert_eq!(list.pop(), Some(20));
+/// assert_eq!(list.pop(), Some(10));
+/// assert_eq!(list.pop(), None); // Once we exhaust the list, None is returned
+/// ```
+///
+/// ## Macro
+/// The [`singly_linked_list!`] macro can be used to make initialization more convenient, the
+/// first value within the square `[]` being the tail, and the final being the head.
+///
+/// ```rust
+/// #[macro_use]
+/// use data_structures::singly_linked_list;
+///
+/// let mut list = singly_linked_list![1, 2, 3]; // Head = 3
+///
+/// assert_eq!(list.pop(), Some(3));
+/// ```
+///
+/// [`singly_linked_list!`]: ../macro.singly_linked_list.html
+///
+/// ## Use as a Stack
+///
+/// The properties of the list make it ideal for use as a stack
+/// ```rust
+/// #[macro_use]
+/// use data_structures::singly_linked_list;
+///
+/// let mut stack = singly_linked_list![1, 2, 3, 4, 5];
+/// while let Some(head) = stack.pop() {
+///     // Prints: 5, 4, 3, 2, 1
+///     println!("{}", head);
+/// }
+/// ```
 pub struct SinglyLinkedList<T> {
     head: Link<T>,
     length: usize,
@@ -19,14 +75,6 @@ impl<T> SinglyLinkedList<T> {
     ///
     /// let mut list: SinglyLinkedList<i32> = SinglyLinkedList::new();
     /// assert_eq!(list.len(), 0);
-    /// ```
-    ///
-    /// Alternatively this can be created shorthand using the `singly_linked_list![]` macro
-    /// ```rust
-    /// #[macro_use]
-    /// use data_structures::singly_linked_list;
-    ///
-    /// let mut list = singly_linked_list![1, 2, 3];
     /// ```
     pub fn new() -> Self {
         Self {
@@ -292,13 +340,13 @@ impl<T> SinglyLinkedList<T> {
     ///
     /// let mut list = singly_linked_list![1, 5, 10, 25, 50];
     ///
-    /// assert_eq!(list.nth(3), Some(&5));
+    /// assert_eq!(list.nth_mut(3), Some(&mut 5));
     ///
     /// assert_eq!(list.pop(), Some(50));
     /// assert_eq!(list.pop(), Some(25));
     ///
-    /// assert_eq!(list.nth(3), None);
-    /// assert_eq!(list.nth(2), Some(&1));
+    /// assert_eq!(list.nth_mut(3), None);
+    /// assert_eq!(list.nth_mut(2), Some(&mut 1));
     /// ```
     pub fn nth_mut(&mut self, index: usize) -> Option<&mut T> {
         if !(index < self.length) {
