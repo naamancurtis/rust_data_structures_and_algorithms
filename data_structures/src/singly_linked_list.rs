@@ -11,7 +11,23 @@ struct Node<T> {
 }
 
 impl<T> SinglyLinkedList<T> {
-    /// Returns a new empty instance of SinglyLinkedList
+    /// Constructs a new, empty `SinglyLinkedList<T>`
+    ///
+    /// # Examples
+    /// ```rust
+    /// use data_structures::singly_linked_list::SinglyLinkedList;
+    ///
+    /// let mut list: SinglyLinkedList<i32> = SinglyLinkedList::new();
+    /// assert_eq!(list.len(), 0);
+    /// ```
+    ///
+    /// Alternatively this can be created shorthand using the `singly_linked_list![]` macro
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::singly_linked_list;
+    ///
+    /// let mut list = singly_linked_list![1, 2, 3];
+    /// ```
     pub fn new() -> Self {
         Self {
             head: None,
@@ -19,10 +35,35 @@ impl<T> SinglyLinkedList<T> {
         }
     }
 
+    /// Returns the number of elements in the list, also referred to as it's _length_
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::singly_linked_list;
+    ///
+    /// let mut list = singly_linked_list![1, 2, 3];
+    ///
+    /// assert_eq!(list.len(), 3);
+    /// ```
     pub fn len(&self) -> usize {
         self.length
     }
 
+    /// Pushes the provided element to the head of the list
+    ///
+    /// # Panics
+    /// Panics if the number of elements in the list overflows a `usize`
+    ///
+    /// # Examples
+    /// ```rust
+    /// use data_structures::singly_linked_list::SinglyLinkedList;
+    ///
+    /// let mut list = SinglyLinkedList::new();
+    /// list.push(1);
+    /// list.push(5);
+    /// list.push(10);
+    /// ```
     pub fn push(&mut self, data: T) {
         let mut new_node = Node::new(data);
         match self.head.take() {
@@ -35,6 +76,21 @@ impl<T> SinglyLinkedList<T> {
         self.length += 1;
     }
 
+    /// Pops the element off the head of the list and returns it, returning `None` if the list
+    /// is empty.
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::singly_linked_list;
+    ///
+    /// let mut list = singly_linked_list![1, 5, 10];
+    ///
+    /// assert_eq!(list.pop(), Some(10));
+    /// assert_eq!(list.pop(), Some(5));
+    /// assert_eq!(list.pop(), Some(1));
+    /// assert_eq!(list.pop(), None);
+    /// ```
     pub fn pop(&mut self) -> Option<T> {
         self.head.take().map(|old_node| {
             self.head = old_node.next;
@@ -45,6 +101,23 @@ impl<T> SinglyLinkedList<T> {
         })
     }
 
+    /// Iterates over the list, reversing the links between all elements. The head becomes
+    /// the tail and the tail becomes the head.
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::singly_linked_list;
+    ///
+    /// let mut list = singly_linked_list![1, 5, 10]; // 10 is currently the head
+    ///
+    /// list.rev();
+    ///
+    /// assert_eq!(list.pop(), Some(1)); // After reversing, 1 is the head
+    /// assert_eq!(list.pop(), Some(5));
+    /// assert_eq!(list.pop(), Some(10));
+    /// assert_eq!(list.pop(), None);
+    /// ```
     pub fn rev(&mut self) {
         let mut previous_ptr = None;
         let mut current_ptr = self.head.take();
@@ -59,30 +132,148 @@ impl<T> SinglyLinkedList<T> {
         self.head = previous_ptr;
     }
 
+    /// Returns a reference to the next element in the list
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::singly_linked_list;
+    ///
+    /// let mut list = singly_linked_list![1, 5, 10];
+    /// assert_eq!(list.peek(), Some(&10));
+    /// assert_eq!(list.peek(), Some(&10)); // .peek() doesn't consume the element
+    /// ```
     pub fn peek(&self) -> Option<&T> {
         self.head.as_ref().take().map(|node| &node.data)
     }
 
+    /// Returns a mutable reference to the next element in the list
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::singly_linked_list;
+    ///
+    /// let mut list = singly_linked_list![1, 5, 10];
+    /// assert_eq!(list.peek_mut(), Some(&mut 10));
+    /// assert_eq!(list.len(), 3);
+    ///
+    /// list.peek_mut().map(|val| *val = 50);
+    /// assert_eq!(list.len(), 3);
+    ///
+    /// assert_eq!(list.pop(), Some(50));
+    /// ```
     pub fn peek_mut(&mut self) -> Option<&mut T> {
         self.head.as_mut().take().map(|node| &mut node.data)
     }
 
+    /// Returns an iterator over the list, consuming the list in the process
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::singly_linked_list;
+    ///
+    /// let mut list = singly_linked_list![1, 5, 10];
+    /// let mut iter = list.into_iter();
+    ///
+    /// assert_eq!(iter.next(), Some(10));
+    /// assert_eq!(iter.next(), Some(5));
+    /// assert_eq!(iter.next(), Some(1));
+    /// assert_eq!(iter.next(), None);
+    /// ```
     pub fn into_iter(self) -> IntoIter<T> {
         IntoIter(self)
     }
 
+    /// Returns an iterator over the list, providing a reference to each element
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::singly_linked_list;
+    ///
+    /// let mut list = singly_linked_list![1, 5, 10];
+    /// let mut iter = list.iter();
+    ///
+    /// assert_eq!(iter.next(), Some(&10));
+    /// assert_eq!(iter.next(), Some(&5));
+    /// assert_eq!(iter.next(), Some(&1));
+    /// assert_eq!(iter.next(), None);
+    ///
+    /// assert_eq!(list.len(), 3); // Note: the list hasn't been consumed
+    /// assert_eq!(list.pop(), Some(10));
+    /// ```
     pub fn iter(&self) -> Iter<T> {
         Iter {
             next: self.head.as_ref().map(|node| &**node),
         }
     }
 
+    /// Returns an iterator over the list, providing a mutable reference to each element
+    ///
+    /// # Examples
+    ///
+    /// Mutating a single value
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::singly_linked_list;
+    ///
+    /// let mut list = singly_linked_list![1, 5, 10];
+    /// let mut iter = list.iter_mut();
+    ///
+    /// assert_eq!(iter.next(), Some(&mut 10));
+    /// iter.next().map(|val| *val = 50); // Mutate 5 to be 50;
+    /// assert_eq!(iter.next(), Some(&mut 1));
+    /// assert_eq!(iter.next(), None);
+    ///
+    /// assert_eq!(list.len(), 3); // Note: the list hasn't been consumed
+    /// assert_eq!(list.pop(), Some(10));
+    /// assert_eq!(list.pop(), Some(50));
+    /// assert_eq!(list.pop(), Some(1));
+    /// ```
+    ///
+    /// Mutating each value in the list
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::singly_linked_list;
+    ///
+    /// let mut list = singly_linked_list![1, 5, 10];
+    /// let mut iter = list.iter_mut();
+    ///
+    /// iter.for_each(|val| *val *= 10);
+    ///
+    /// assert_eq!(list.len(), 3);
+    /// assert_eq!(list.pop(), Some(100));
+    /// assert_eq!(list.pop(), Some(50));
+    /// assert_eq!(list.pop(), Some(10));
+    /// ```
     pub fn iter_mut(&mut self) -> IterMut<T> {
         IterMut {
             next: self.head.as_mut().map(|node| &mut **node),
         }
     }
 
+    /// Starting with the head at index `0`, iterates through the list returning a reference to
+    /// the element at the provided index or `None` if that index doesn't exist
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::singly_linked_list;
+    ///
+    /// let mut list = singly_linked_list![1, 5, 10, 25, 50];
+    ///
+    /// assert_eq!(list.nth(3), Some(&5));
+    ///
+    /// assert_eq!(list.pop(), Some(50));
+    /// assert_eq!(list.pop(), Some(25));
+    ///
+    /// assert_eq!(list.nth(3), None);
+    /// assert_eq!(list.nth(2), Some(&1));
+    /// ```
     pub fn nth(&self, index: usize) -> Option<&T> {
         if !(index < self.length) {
             return None;
@@ -90,6 +281,24 @@ impl<T> SinglyLinkedList<T> {
         self.iter().nth(index)
     }
 
+    /// Starting with the head at index `0`, iterates through the list returning a mutable reference to
+    /// the element at the provided index or `None` if that index doesn't exist
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::singly_linked_list;
+    ///
+    /// let mut list = singly_linked_list![1, 5, 10, 25, 50];
+    ///
+    /// assert_eq!(list.nth(3), Some(&5));
+    ///
+    /// assert_eq!(list.pop(), Some(50));
+    /// assert_eq!(list.pop(), Some(25));
+    ///
+    /// assert_eq!(list.nth(3), None);
+    /// assert_eq!(list.nth(2), Some(&1));
+    /// ```
     pub fn nth_mut(&mut self, index: usize) -> Option<&mut T> {
         if !(index < self.length) {
             return None;
@@ -97,9 +306,62 @@ impl<T> SinglyLinkedList<T> {
         self.iter_mut().nth(index)
     }
 
+    /// Consumes the list, returning a Vec<T> filled with the elements in the order of head -> tail
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::singly_linked_list;
+    ///
+    /// let mut list = singly_linked_list![1, 5, 10, 25, 50];
+    ///
+    /// assert_eq!(list.len(), 5);
+    ///
+    /// assert_eq!(list.into_vec(), vec![50, 25, 10, 5, 1])
+    /// ```
     pub fn into_vec(self) -> Vec<T> {
         self.into_iter().collect()
     }
+}
+/// Provides a shorthand macro for creating a Singly Linked List with multiple elements in it. The
+/// start of the list being the tail and the final element being the head.
+///
+/// # Examples
+///
+/// ```rust
+/// #[macro_use]
+/// use data_structures::singly_linked_list;
+/// use data_structures::singly_linked_list::SinglyLinkedList;
+///
+/// // Tail: 1
+/// // Head: 5
+///
+/// // Macro notation:
+/// let mut list = singly_linked_list![1, 2, 3, 4, 5];
+///
+/// assert_eq!(list.pop(), Some(5));
+///
+/// // Longhand notation:
+/// let mut list = SinglyLinkedList::new();
+/// list.push(1);
+/// list.push(2);
+/// list.push(3);
+/// list.push(4);
+/// list.push(5);
+///
+/// assert_eq!(list.pop(), Some(5));
+/// ```
+#[macro_export]
+macro_rules! singly_linked_list {
+    ($($x:expr),*) => {
+        {
+            let mut temp_list = $crate::singly_linked_list::SinglyLinkedList::new();
+            $(
+                temp_list.push($x);
+            )*
+            temp_list
+        }
+    };
 }
 
 impl<T> Node<T> {
