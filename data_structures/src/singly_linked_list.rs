@@ -82,6 +82,24 @@ impl<T> SinglyLinkedList<T> {
             next: self.head.as_mut().map(|node| &mut **node),
         }
     }
+
+    pub fn nth(&self, index: usize) -> Option<&T> {
+        if !(index < self.length) {
+            return None;
+        }
+        self.iter().nth(index)
+    }
+
+    pub fn nth_mut(&mut self, index: usize) -> Option<&mut T> {
+        if !(index < self.length) {
+            return None;
+        }
+        self.iter_mut().nth(index)
+    }
+
+    pub fn into_vec(self) -> Vec<T> {
+        self.into_iter().collect()
+    }
 }
 
 impl<T> Node<T> {
@@ -258,18 +276,75 @@ mod tests {
         list.push(3);
 
         list.rev();
+        assert_eq!(list.len(), 3);
 
         assert_eq!(list.pop(), Some(1));
         assert_eq!(list.pop(), Some(2));
+        assert_eq!(list.len(), 1);
 
         list.push(4);
         list.push(5);
+        assert_eq!(list.len(), 3);
 
         list.rev();
+        assert_eq!(list.len(), 3);
 
         assert_eq!(list.pop(), Some(3));
         assert_eq!(list.pop(), Some(4));
         assert_eq!(list.pop(), Some(5));
         assert_eq!(list.pop(), None);
+    }
+
+    #[test]
+    fn nth() {
+        let mut list = SinglyLinkedList::new();
+        list.push(1);
+        list.push(2);
+        list.push(3);
+        list.push(4);
+        list.push(5);
+
+        assert_eq!(list.nth(3), Some(&2));
+
+        assert_eq!(list.pop(), Some(5));
+        assert_eq!(list.pop(), Some(4));
+
+        assert_eq!(list.nth(3), None);
+        assert_eq!(list.nth(2), Some(&1));
+    }
+
+    #[test]
+    fn nth_mut() {
+        let mut list = SinglyLinkedList::new();
+        list.push(1);
+        list.push(2);
+        list.push(3);
+        list.push(4);
+        list.push(5);
+
+        assert_eq!(list.nth_mut(3), Some(&mut 2));
+
+        list.nth_mut(3).map(|val| *val = 42);
+
+        assert_eq!(list.pop(), Some(5));
+        assert_eq!(list.pop(), Some(4));
+
+        assert_eq!(list.nth(3), None);
+        assert_eq!(list.nth_mut(2), Some(&mut 1));
+        assert_eq!(list.nth_mut(1), Some(&mut 42));
+    }
+
+    #[test]
+    fn into_vec() {
+        let mut list = SinglyLinkedList::new();
+        list.push(1);
+        list.push(2);
+        list.push(3);
+        list.push(4);
+        list.push(5);
+
+        assert_eq!(list.len(), 5);
+
+        assert_eq!(list.into_vec(), vec![5, 4, 3, 2, 1])
     }
 }
