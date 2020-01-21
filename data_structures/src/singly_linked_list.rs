@@ -307,6 +307,66 @@ impl<T> SinglyLinkedList<T> {
         self.iter_mut().nth(index)
     }
 
+    /// Mutates the list it is called on, splitting it into 2 at index provided
+    /// _(with the index being head for the newly created second list)_, returning
+    /// the newly created second list
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::singly_linked_list;
+    ///
+    /// let mut list = singly_linked_list![1, 5, 10];
+    /// let mut split_list = list.split(1);
+    ///
+    /// assert_eq!(list.len(), 1);
+    /// assert_eq!(split_list.len(), 2);
+    ///
+    /// assert_eq!(list.pop(), Some(10));
+    /// assert_eq!(list.pop(), None);
+    ///
+    /// assert_eq!(split_list.pop(), Some(5));
+    /// assert_eq!(split_list.pop(), Some(1));
+    /// assert_eq!(split_list.pop(), None);
+    ///```
+    pub fn split(&mut self, index: usize) -> SinglyLinkedList<T> {
+        let mut new_list = SinglyLinkedList::new();
+        if index > self.length || index == 0 {
+            return new_list;
+        }
+
+        let mut old_list_tail = self
+            .head
+            .as_mut()
+            .expect("as the length is greater than 0, the head should always contain Some(node)");
+
+        let mut counter = index;
+
+        loop {
+            counter -= 1;
+
+            // If the counter is down to 0, then we want to take the next value
+            if counter == 0 {
+                new_list.head = old_list_tail.next.take();
+                break;
+            }
+
+            // Otherwise we want to iterate to the next element in the list
+            old_list_tail = match old_list_tail.next.as_mut() {
+                Some(node) => node,
+                _ => break,
+            };
+        }
+
+        // Todo - Updating the length property is actually less efficient than the algorithm - O(n) time
+        // need to work out how to improve this
+        self.update_length();
+        new_list.update_length();
+
+        new_list
+    }
+
     /// Consumes the list, returning a Vec<T> filled with the elements in the order of head -> tail
     ///
     /// # Examples
@@ -323,7 +383,22 @@ impl<T> SinglyLinkedList<T> {
     pub fn into_vec(self) -> Vec<T> {
         self.into_iter().collect()
     }
+
+    /// Iterates through the list and counts the number of elements, then updates the internal
+    /// counter
+    fn update_length(&mut self) {
+        let mut counter = 0;
+        self.iter().for_each(|_| counter += 1);
+        self.length = counter;
+    }
 }
+
+impl<T> Drop for SinglyLinkedList<T> {
+    fn drop(&mut self) {
+        while self.pop().is_some() {}
+    }
+}
+
 /// Provides a shorthand macro for creating a Singly Linked List with multiple elements in it.
 ///
 /// The start of the list being the tail and the final element being the head.
@@ -610,5 +685,39 @@ mod tests {
         assert_eq!(list.len(), 5);
 
         assert_eq!(list.into_vec(), vec![5, 4, 3, 2, 1])
+    }
+
+    #[test]
+    fn split() {
+        let mut list = singly_linked_list![1, 2, 3, 7, 8, 9];
+        let mut split_list = list.split(3);
+
+        assert_eq!(list.len(), 3);
+        assert_eq!(split_list.len(), 3);
+
+        assert_eq!(list.pop(), Some(9));
+        assert_eq!(list.pop(), Some(8));
+        assert_eq!(list.pop(), Some(7));
+        assert_eq!(list.pop(), None);
+
+        assert_eq!(split_list.pop(), Some(3));
+        assert_eq!(split_list.pop(), Some(2));
+        assert_eq!(split_list.pop(), Some(1));
+        assert_eq!(split_list.pop(), None);
+    }
+
+    #[test]
+    fn split_len_2() {
+        let mut list = singly_linked_list![1, 2];
+        let mut split_list = list.split(1);
+
+        assert_eq!(list.len(), 1);
+        assert_eq!(split_list.len(), 1);
+
+        assert_eq!(list.pop(), Some(2));
+        assert_eq!(list.pop(), None);
+
+        assert_eq!(split_list.pop(), Some(1));
+        assert_eq!(split_list.pop(), None);
     }
 }
