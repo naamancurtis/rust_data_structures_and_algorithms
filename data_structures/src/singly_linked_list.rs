@@ -498,12 +498,60 @@ impl<T> Node<T> {
 
 // ============ Iterator Wrappers ============
 
+/// An iterator that moves out of a SinglyLinkedList, consuming it in the process
+///
+/// # Examples
+///
+/// ```rust
+/// #[macro_use]
+/// use data_structures::singly_linked_list;
+///
+/// let mut list = singly_linked_list![1, 5, 10, 25, 50];
+///
+/// let mut iter = list.into_iter(); // list has been `moved` and can no longer be used
+///
+/// assert_eq!(iter.next(), Some(50));
+/// ```
 pub struct IntoIter<T>(SinglyLinkedList<T>);
 
+/// An iterator that provides immutable references over a SinglyLinkedList, it does not consume it in the process
+///
+/// # Examples
+///
+/// ```rust
+/// #[macro_use]
+/// use data_structures::singly_linked_list;
+///
+/// let mut list = singly_linked_list![1, 5, 10, 25, 50];
+///
+/// let mut iter = list.iter();
+///
+/// assert_eq!(iter.next(), Some(&50));
+/// assert_eq!(list.len(), 5); // list hasn't been consumed
+/// ```
 pub struct Iter<'a, T> {
     next: Option<&'a Node<T>>,
 }
 
+/// An iterator that provides mutable references over a SinglyLinkedList, it does not consume it in the process
+///
+/// # Examples
+///
+/// ```rust
+/// #[macro_use]
+/// use data_structures::singly_linked_list;
+///
+/// let mut list = singly_linked_list![1, 5, 10, 25, 50];
+///
+/// let mut iter = list.iter_mut();
+///
+/// assert_eq!(iter.next(), Some(&mut 50));
+///
+/// iter.next().map(|val| *val *= 10); // lets mutate the second value
+///
+/// assert_eq!(list.pop(), Some(50)); // the element hasn't been consumed
+/// assert_eq!(list.pop(), Some(250)); // here is our mutated value
+/// ```
 pub struct IterMut<'a, T> {
     next: Option<&'a mut Node<T>>,
 }
