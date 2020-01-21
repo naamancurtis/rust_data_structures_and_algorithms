@@ -226,6 +226,7 @@ impl<T> SinglyLinkedList<T> {
     ///
     /// assert_eq!(iter.next(), Some(&mut 10));
     /// iter.next().map(|val| *val = 50); // Mutate 5 to be 50;
+    ///
     /// assert_eq!(iter.next(), Some(&mut 1));
     /// assert_eq!(iter.next(), None);
     ///
@@ -323,8 +324,9 @@ impl<T> SinglyLinkedList<T> {
         self.into_iter().collect()
     }
 }
-/// Provides a shorthand macro for creating a Singly Linked List with multiple elements in it. The
-/// start of the list being the tail and the final element being the head.
+/// Provides a shorthand macro for creating a Singly Linked List with multiple elements in it.
+///
+/// The start of the list being the tail and the final element being the head.
 ///
 /// # Examples
 ///
