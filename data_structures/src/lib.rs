@@ -10,5 +10,6 @@
 
 pub mod deque;
 pub mod persistent_stack;
+pub mod singly_linked_list;
 pub mod singly_linked_stack;
 pub mod unsafe_singly_linked_queue;
