@@ -357,7 +357,10 @@ impl<T> SinglyLinkedList<T> {
 
     /// Mutates the list it is called on, splitting it into 2 at index provided
     /// _(with the index being head for the newly created second list)_, returning
-    /// the newly created second list
+    /// the newly created second list.
+    ///
+    /// **Note:** If an index of `0` is passed as an argument, an empty list is returned,
+    /// with the existing list remaining unmutated.
     ///
     /// # Examples
     ///
@@ -407,10 +410,10 @@ impl<T> SinglyLinkedList<T> {
             };
         }
 
-        // Todo - Updating the length property is actually less efficient than the algorithm - O(n) time
-        // need to work out how to improve this
-        self.update_length();
-        new_list.update_length();
+        // Todo - Not sure this is the most reliable way to do this, but
+        // it's more efficient than iterating over both new lists and counting elements
+        new_list.length = self.length - index;
+        self.length = self.length - new_list.length;
 
         new_list
     }
@@ -430,14 +433,6 @@ impl<T> SinglyLinkedList<T> {
     /// ```
     pub fn into_vec(self) -> Vec<T> {
         self.into_iter().collect()
-    }
-
-    /// Iterates through the list and counts the number of elements, then updates the internal
-    /// counter
-    fn update_length(&mut self) {
-        let mut counter = 0;
-        self.iter().for_each(|_| counter += 1);
-        self.length = counter;
     }
 }
 
