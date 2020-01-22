@@ -38,10 +38,23 @@
 //! // As we just pushed 20 onto the head of the list, it's also the value we pop off
 //! ```
 //!
+//! The debug trait has been implemented to enable easier visualisation of a list
+//!
+//! ```rust
+//! #[macro_use]
+//! use data_structures::singly_linked_list;
+//!
+//! let mut list = singly_linked_list![1, 2, 3, 4, 5];
+//! println!("{:?}", list);
+//! // Prints: | 5 | -> | 4 | -> | 3 | -> | 2 | -> | 1 |
+//! ```
+//!
 //! [`new`]: ./struct.SinglyLinkedList.html#method.new
 //! [`push`]: ./struct.SinglyLinkedList.html#method.push
 //! [`pop`]: ./struct.SinglyLinkedList.html#method.pop
 //! [`singly_linked_list!`]: ../macro.singly_linked_list.html
+
+use std::fmt::{Debug, Error, Formatter};
 
 /// # Safe implementation of a Singly Linked List with single ownership
 ///
@@ -103,12 +116,12 @@ pub struct SinglyLinkedList<T> {
     length: usize,
 }
 
-type Link<T> = Option<Box<Node<T>>>;
-
 struct Node<T> {
     data: T,
     next: Link<T>,
 }
+
+type Link<T> = Option<Box<Node<T>>>;
 
 impl<T> SinglyLinkedList<T> {
     /// Constructs a new, empty `SinglyLinkedList<T>`
@@ -587,6 +600,20 @@ macro_rules! singly_linked_list {
             temp_list
         }
     };
+}
+
+impl<T: Debug> Debug for SinglyLinkedList<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        let mut node = self.head.as_ref();
+        while let Some(n) = node {
+            write!(f, "| {:?}", n.data)?;
+            node = n.next.as_ref();
+            if node.is_some() {
+                write!(f, " | -> ")?;
+            }
+        }
+        write!(f, " |")
+    }
 }
 
 impl<T> Node<T> {
