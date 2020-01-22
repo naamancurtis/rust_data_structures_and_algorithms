@@ -43,7 +43,7 @@
 //! [`pop`]: ./struct.SinglyLinkedList.html#method.pop
 //! [`singly_linked_list!`]: ../macro.singly_linked_list.html
 
-use std::cell::{Ref, RefCell, RefMut};
+use std::cell::RefCell;
 use std::fmt::{Debug, Error, Formatter};
 use std::rc::{Rc, Weak};
 
@@ -59,33 +59,36 @@ use std::rc::{Rc, Weak};
 /// # Examples
 ///
 /// ```rust
-/// use data_structures::singly_linked_list::SinglyLinkedList;
+/// use data_structures::doubly_linked_list::DoublyLinkedList;
 ///
-/// let mut list = SinglyLinkedList::new();
-/// list.push(10);
-/// list.push(20);
-/// list.push(30); // <- This is our head
+/// let mut list = DoublyLinkedList::new();
+/// list.push_front(10);
+/// list.push_front(20);
+/// list.push_front(30); // <- This is our head
+///
+/// println!("{:?}", list); // Debug has been implemented for DoublyLinkedList<T>
+/// // Prints: H: | 30 | 20 | 10 | :T
 ///
 /// assert_eq!(list.len(), 3);
 ///
-/// let element = list.pop(); // We pop the head off the list
+/// let element = list.pop_front(); // We pop the head off the list
 /// assert_eq!(element, Some(30));
-/// assert_eq!(list.pop(), Some(20));
-/// assert_eq!(list.pop(), Some(10));
-/// assert_eq!(list.pop(), None); // Once we exhaust the list, None is returned
+/// assert_eq!(list.pop_front(), Some(20));
+/// assert_eq!(list.pop_front(), Some(10));
+/// assert_eq!(list.pop_front(), None); // Once we exhaust the list, None is returned
 /// ```
 ///
 /// ## Macro
-/// The [`singly_linked_list!`] macro can be used to make initialization more convenient, the
+/// The [`doubly_linked_list!`] macro can be used to make initialization more convenient, the
 /// first value within the square `[]` being the tail, and the final being the head.
 ///
 /// ```rust
 /// #[macro_use]
-/// use data_structures::singly_linked_list;
+/// use data_structures::doubly_linked_list;
 ///
-/// let mut list = singly_linked_list![1, 2, 3]; // Head = 3
+/// let mut list = doubly_linked_list![1, 2, 3]; // Head = 3
 ///
-/// assert_eq!(list.pop(), Some(3));
+/// assert_eq!(list.pop_front(), Some(3));
 /// ```
 ///
 ///
@@ -94,10 +97,10 @@ use std::rc::{Rc, Weak};
 /// The properties of the list make it ideal for use as a stack
 /// ```rust
 /// #[macro_use]
-/// use data_structures::singly_linked_list;
+/// use data_structures::doubly_linked_list;
 ///
-/// let mut stack = singly_linked_list![1, 2, 3, 4, 5];
-/// while let Some(head) = stack.pop() {
+/// let mut stack = doubly_linked_list![1, 2, 3, 4, 5];
+/// while let Some(head) = stack.pop_front() {
 ///     // Prints: 5, 4, 3, 2, 1
 ///     println!("{}", head);
 /// }
@@ -217,7 +220,91 @@ impl<T> DoublyLinkedList<T> {
             Rc::try_unwrap(old_node).ok().unwrap().into_inner().data
         })
     }
-    //
+
+    /// Pushes the provided element to the head of the list
+    ///
+    /// # Panics
+    /// Panics if the number of elements in the list overflows a `usize`
+    ///
+    /// # Examples
+    /// ```rust
+    /// use data_structures::doubly_linked_list::DoublyLinkedList;
+    ///
+    /// let mut list = DoublyLinkedList::new();
+    /// list.push_back(1);
+    /// list.push_back(5);
+    /// list.push_back(10);
+    ///
+    /// assert_eq!(list.len(), 3);
+    /// assert_eq!(list.pop_front(),Some(1));
+    /// ```
+    pub fn push_back(&mut self, data: T) {
+        let new_node = Node::new(data);
+        match self.tail.take() {
+            Some(old_tail) => {
+                new_node.borrow_mut().prev = Some(Rc::downgrade(&Rc::clone(&old_tail)));
+                old_tail.borrow_mut().next = Some(Rc::clone(&new_node));
+                self.tail = Some(new_node);
+            }
+            None => {
+                self.tail = Some(Rc::clone(&new_node));
+                self.head = Some(new_node);
+            }
+        }
+        self.length += 1;
+    }
+
+    /// Pops the element off the head of the list and returns it, returning `None` if the list
+    /// is empty.
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::doubly_linked_list;
+    ///
+    /// let mut list = doubly_linked_list![1, 5, 10, 25];
+    ///
+    /// println!("{:?}", list);
+    ///
+    /// assert_eq!(list.pop_back(), Some(1));
+    /// println!("First {:?}", list);
+    /// assert_eq!(list.pop_back(), Some(5));
+    /// println!("Second {:?}", list);
+    /// assert_eq!(list.pop_back(), Some(10));
+    /// println!("Third {:?}", list);
+    /// assert_eq!(list.pop_back(), Some(25));
+    /// println!("Empty {:?}", list);
+    /// assert_eq!(list.pop_back(), None);
+    /// ```
+    pub fn pop_back(&mut self) -> Option<T> {
+        self.tail.take().map(|old_tail| {
+            match old_tail.borrow_mut().prev.take() {
+                Some(new_tail) => {
+                    let upgraded_tail = match new_tail.upgrade() {
+                        Some(tail) => {
+                            RefCell::borrow_mut(&tail).next.take();
+                            Some(tail)
+                        }
+                        None => None,
+                    };
+
+                    self.tail = upgraded_tail;
+                }
+                None => {
+                    self.head.take();
+                }
+            };
+
+            if self.length >= 1 {
+                self.length -= 1;
+            } else {
+                self.length = 0;
+            }
+
+            Rc::try_unwrap(old_tail).ok().unwrap().into_inner().data
+        })
+    }
+
     //    /// Iterates over the list, reversing the links between all elements. The head becomes
     //    /// the tail and the tail becomes the head.
     //    ///
@@ -764,6 +851,35 @@ mod tests {
         assert_eq!(list.pop_front(), None);
 
         assert_eq!(list.len(), 0);
+    }
+
+    #[test]
+    fn push_pop_back() {
+        let mut list = DoublyLinkedList::new();
+
+        // Check empty list behaves right
+        assert_eq!(list.pop_back(), None);
+
+        // Check pushing data
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+
+        // Check popping data
+        assert_eq!(list.pop_back(), Some(3));
+        assert_eq!(list.pop_back(), Some(2));
+
+        // Check popping hasn't corrupted pushing
+        list.push_back(4);
+        list.push_back(5);
+
+        // Check popping still works
+        assert_eq!(list.pop_back(), Some(5));
+        assert_eq!(list.pop_back(), Some(4));
+
+        // Check exhaustion
+        assert_eq!(list.pop_back(), Some(1));
+        assert_eq!(list.pop_back(), None);
     }
     //
     //    #[test]
