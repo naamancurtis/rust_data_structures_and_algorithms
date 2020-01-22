@@ -46,7 +46,7 @@
 //!
 //! let mut list = singly_linked_list![1, 2, 3, 4, 5];
 //! println!("{:?}", list);
-//! // Prints: | 5 | -> | 4 | -> | 3 | -> | 2 | -> | 1 |
+//! // Prints: H:| 5 | -> | 4 | -> | 3 | -> | 2 | -> | 1 |:T
 //! ```
 //!
 //! [`new`]: ./struct.SinglyLinkedList.html#method.new
@@ -605,6 +605,7 @@ macro_rules! singly_linked_list {
 impl<T: Debug> Debug for SinglyLinkedList<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         let mut node = self.head.as_ref();
+        write!(f, "H: ")?;
         while let Some(n) = node {
             write!(f, "| {:?}", n.data)?;
             node = n.next.as_ref();
@@ -612,7 +613,7 @@ impl<T: Debug> Debug for SinglyLinkedList<T> {
                 write!(f, " | -> ")?;
             }
         }
-        write!(f, " |")
+        write!(f, " | :T")
     }
 }
 
