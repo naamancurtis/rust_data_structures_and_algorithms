@@ -1,4 +1,49 @@
-/// # Safe implementation of a single ownership Singly Linked List
+//! # Singly Linked List
+//!
+//! A growable singly linked list with heap allocated contents.
+//!
+//! It has `O(1)` access, pushing and popping from the **head** element. Interacting with any
+//! value in the list other than the head will require `O(k)` time to iterate through the list
+//! where `k` is the desired index of the element _(`O(n)` worst case)_.
+//!
+//! # Examples
+//! You can explicitly create a new list with [`new`]
+//! ```rust
+//! use data_structures::singly_linked_list::SinglyLinkedList;
+//!
+//! let mut list: SinglyLinkedList<i32> = SinglyLinkedList::new();
+//! ```
+//!
+//! or alternatively use the provided [`singly_linked_list!`] macro
+//! ```rust
+//! #[macro_use]
+//! use data_structures::singly_linked_list;
+//!
+//! let mut list = singly_linked_list![1, 2, 3]; // Head = 3
+//! ```
+//!
+//! Once the list is instantiated you can then [`push`] and [`pop`] values in much the same way
+//! as a `Vec<T>`
+//!
+//! ```rust
+//! #[macro_use]
+//! use data_structures::singly_linked_list;
+//!
+//! let mut list = singly_linked_list![1, 2, 3]; // Head = 3
+//!
+//! list.push(20); // Push a new value onto the head of the list
+//! assert_eq!(list.len(), 4);
+//!
+//! assert_eq!(list.pop(), Some(20)); // pop returns `Option<T>`
+//! // As we just pushed 20 onto the head of the list, it's also the value we pop off
+//! ```
+//!
+//! [`new`]: ./struct.SinglyLinkedList.html#method.new
+//! [`push`]: ./struct.SinglyLinkedList.html#method.push
+//! [`pop`]: ./struct.SinglyLinkedList.html#method.pop
+//! [`singly_linked_list!`]: ../macro.singly_linked_list.html
+
+/// # Safe implementation of a Singly Linked List with single ownership
 ///
 /// This list maintains a pointer to the element at the *head* of the list, where each element
 /// maintains a subsequent pointer to the next element in the list. Interactions should ideally be
@@ -39,7 +84,6 @@
 /// assert_eq!(list.pop(), Some(3));
 /// ```
 ///
-/// [`singly_linked_list!`]: ../macro.singly_linked_list.html
 ///
 /// ## Use as a Stack
 ///
@@ -353,6 +397,67 @@ impl<T> SinglyLinkedList<T> {
             return None;
         }
         self.iter_mut().nth(index)
+    }
+
+    /// Inserts the data provided and the specified index within the list. If the index
+    /// exceeds the length of the list, it will add the new element at the end of the list.
+    ///
+    /// In the event that `0` is passed as the index, the `.push()` method is called to add the
+    /// element instead
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::singly_linked_list;
+    ///
+    /// let mut list = singly_linked_list![1, 5, 10];
+    ///
+    /// assert_eq!(list.len(), 3);
+    ///
+    /// list.insert(50, 1);
+    /// assert_eq!(list.len(), 4);
+    ///
+    /// assert_eq!(list.pop(), Some(10));
+    /// assert_eq!(list.pop(), Some(50));
+    /// assert_eq!(list.pop(), Some(5));
+    /// assert_eq!(list.pop(), Some(1));
+    /// assert_eq!(list.pop(), None);
+    /// ```
+    pub fn insert(&mut self, data: T, index: usize) {
+        if index == 0 {
+            self.push(data);
+            return;
+        }
+
+        let mut old_list_tail = self
+            .head
+            .as_mut()
+            .expect("as the length is greater than 0, the head should always contain Some(node)");
+
+        let mut counter = index.min(self.length);
+
+        loop {
+            counter -= 1;
+
+            // If the counter is down to 0, then we want to take the next value
+            if counter == 0 {
+                let mut new_node = Node::new(data);
+                new_node.next = old_list_tail.next.take();
+                old_list_tail.next = Some(new_node);
+                break;
+            }
+
+            // Otherwise we want to iterate to the next element in the list
+            old_list_tail = match old_list_tail.next.as_mut() {
+                Some(node) => node,
+                // If the list is none, then we've reached the end of the list, so we'll
+                // add the new element at the end of the list
+                None => break,
+            };
+        }
+
+        self.length += 1;
     }
 
     /// Mutates the list it is called on, splitting it into 2 at index provided
@@ -810,5 +915,26 @@ mod tests {
 
         assert_eq!(split_list.pop(), Some(1));
         assert_eq!(split_list.pop(), None);
+    }
+
+    #[test]
+    fn insert() {
+        let mut list = singly_linked_list![5, 10];
+
+        list.insert(50, 1);
+        assert_eq!(list.len(), 3);
+
+        list.insert(100, 10);
+        assert_eq!(list.len(), 4);
+
+        list.insert(250, 0);
+        assert_eq!(list.len(), 5);
+
+        assert_eq!(list.pop(), Some(250));
+        assert_eq!(list.pop(), Some(10));
+        assert_eq!(list.pop(), Some(50));
+        assert_eq!(list.pop(), Some(5));
+        assert_eq!(list.pop(), Some(100));
+        assert_eq!(list.pop(), None);
     }
 }
