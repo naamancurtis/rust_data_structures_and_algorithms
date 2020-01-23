@@ -4,7 +4,7 @@
 //!
 //! It has `O(1)` access, pushing and popping from the **head** element. Interacting with any
 //! value in the list other than the head will require `O(k)` time to iterate through the list
-//! where `k` is the desired index of the element _(`O(n)` worst case)_.
+//! where `k` is the desired index of the element _(`O(n)` worst case)_.   
 //!
 //! # Examples
 //! You can explicitly create a new list with [`new`]

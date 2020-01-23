@@ -43,7 +43,7 @@
 //! [`pop`]: ./struct.SinglyLinkedList.html#method.pop
 //! [`singly_linked_list!`]: ../macro.singly_linked_list.html
 
-use std::cell::RefCell;
+use std::cell::{Ref, RefCell, RefMut};
 use std::default::Default;
 use std::fmt::{Debug, Error, Formatter};
 use std::rc::Rc;
@@ -314,6 +314,12 @@ impl<T> DoublyLinkedList<T> {
     /// Iterates over the list, reversing the links between all elements. The head becomes
     /// the tail and the tail becomes the head.
     ///
+    /// # Notes
+    /// This method actually mutates each node so that `next` becomes `previous` and
+    /// `previous` becomes `next` as opposed to just reversing the direction of traversal. If
+    /// the intention is simply to reverse the direction of traversal, instead convert the list
+    /// to some kind of **iterator** and call `.rev()` on the iterator.
+    ///
     /// # Examples
     /// ```rust
     /// #[macro_use]
@@ -355,41 +361,100 @@ impl<T> DoublyLinkedList<T> {
         self.head = tail;
         self.tail = head;
     }
-    //
-    //    /// Returns a reference to the next element in the list
-    //    ///
-    //    /// # Examples
-    //    /// ```rust
-    //    /// #[macro_use]
-    //    /// use data_structures::singly_linked_list;
-    //    ///
-    //    /// let mut list = singly_linked_list![1, 5, 10];
-    //    /// assert_eq!(list.peek(), Some(&10));
-    //    /// assert_eq!(list.peek(), Some(&10)); // .peek() doesn't consume the element
-    //    /// ```
-    //    pub fn peek(&self) -> Option<&T> {
-    //        self.head.as_ref().take().map(|node| &node.data)
-    //    }
-    //
-    //    /// Returns a mutable reference to the next element in the list
-    //    ///
-    //    /// # Examples
-    //    /// ```rust
-    //    /// #[macro_use]
-    //    /// use data_structures::singly_linked_list;
-    //    ///
-    //    /// let mut list = singly_linked_list![1, 5, 10];
-    //    /// assert_eq!(list.peek_mut(), Some(&mut 10));
-    //    /// assert_eq!(list.len(), 3);
-    //    ///
-    //    /// list.peek_mut().map(|val| *val = 50);
-    //    /// assert_eq!(list.len(), 3);
-    //    ///
-    //    /// assert_eq!(list.pop(), Some(50));
-    //    /// ```
-    //    pub fn peek_mut(&mut self) -> Option<&mut T> {
-    //        self.head.as_mut().take().map(|node| &mut node.data)
-    //    }
+
+    /// Returns a reference to the next element in the list
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::doubly_linked_list;
+    ///
+    /// let mut list = doubly_linked_list![1, 5, 10];
+    ///
+    /// // Because the element is wrapped in an `Rc<RefCell<T>>>` we need to `.unwrap()` the
+    /// // option and de-reference the `Ref` to receive the value
+    /// assert_eq!(*(list.peek_front().unwrap()), 10);
+    ///
+    /// // *list.peek_front().unwrap() = 50; - This value can't be assigned to (it will error) as it doesn't implement
+    /// // DerefMut (see .peek_front_mut() if a mutable reference is needed)
+    ///
+    /// assert_eq!(&* list.peek_front().unwrap(), &10); // .peek() doesn't consume the element
+    /// ```
+    pub fn peek_front(&self) -> Option<Ref<T>> {
+        self.head
+            .as_ref()
+            .map(|node| Ref::map(RefCell::borrow(node), |node| &node.data))
+    }
+
+    /// Returns a mutable reference to the next element in the list
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::doubly_linked_list;
+    ///
+    /// let mut list = doubly_linked_list![1, 5, 10];
+    ///
+    /// assert_eq!(&mut *(list.peek_front_mut().unwrap()), &mut 10);
+    /// assert_eq!(list.len(), 3);
+    ///
+    /// *list.peek_front_mut().unwrap() = 50;
+    /// assert_eq!(list.len(), 3);
+    ///
+    /// assert_eq!(list.pop_front(), Some(50));
+    /// ```
+    pub fn peek_front_mut(&mut self) -> Option<RefMut<T>> {
+        self.head
+            .as_ref()
+            .map(|node| RefMut::map(RefCell::borrow_mut(node), |node| &mut node.data))
+    }
+
+    /// Returns a reference to the last element in the list
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::doubly_linked_list;
+    ///
+    /// let mut list = doubly_linked_list![1, 5, 10];
+    ///
+    /// // Because the element is wrapped in an `Rc<RefCell<T>>>` we need to `.unwrap()` the
+    /// // option and de-reference the `Ref` to receive the value
+    /// assert_eq!(*(list.peek_back().unwrap()), 1);
+    ///
+    /// // *list.peek_back().unwrap() = 50; - This value can't be assigned to (it will error) as it doesn't implement
+    /// // DerefMut (see .peek_back_mut() if a mutable reference is needed)
+    ///
+    /// assert_eq!(&* list.peek_back().unwrap(), &1); // .peek() doesn't consume the element
+    /// ```
+    pub fn peek_back(&self) -> Option<Ref<T>> {
+        self.tail
+            .as_ref()
+            .map(|node| Ref::map(RefCell::borrow(node), |node| &node.data))
+    }
+
+    /// Returns a mutable reference to the last element in the list
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::doubly_linked_list;
+    ///
+    /// let mut list = doubly_linked_list![1, 5, 10];
+    ///
+    /// assert_eq!(&mut *(list.peek_back_mut().unwrap()), &mut 1);
+    /// assert_eq!(list.len(), 3);
+    ///
+    /// *list.peek_back_mut().unwrap() = 25;
+    /// assert_eq!(list.len(), 3);
+    ///
+    /// assert_eq!(list.pop_back(), Some(25));
+    /// ```
+    pub fn peek_back_mut(&mut self) -> Option<RefMut<T>> {
+        self.tail
+            .as_ref()
+            .map(|node| RefMut::map(RefCell::borrow_mut(node), |node| &mut node.data))
+    }
     //
     //    /// Returns an iterator over the list, consuming the list in the process
     //    ///
@@ -947,42 +1012,74 @@ mod tests {
     //        assert_eq!(iter.next(), None);
     //    }
     //
-    //    #[test]
-    //    fn peek() {
-    //        let mut list = DoublyLinkedList::new();
-    //        list.push(1);
-    //        list.push(2);
-    //        list.push(3);
-    //
-    //        assert_eq!(list.peek(), Some(&3));
-    //        assert_eq!(list.peek(), Some(&3));
-    //
-    //        list.push(4);
-    //        list.push(5);
-    //
-    //        assert_eq!(list.peek(), Some(&5));
-    //    }
-    //
-    //    #[test]
-    //    fn peek_mut() {
-    //        let mut list = DoublyLinkedList::new();
-    //        list.push(1);
-    //        list.push(2);
-    //        list.push(3);
-    //
-    //        assert_eq!(list.peek_mut(), Some(&mut 3));
-    //        assert_eq!(list.peek_mut(), Some(&mut 3));
-    //
-    //        list.push(4);
-    //        list.push(5);
-    //
-    //        assert_eq!(list.peek_mut(), Some(&mut 5));
-    //
-    //        list.peek_mut().map(|val| *val = 42);
-    //
-    //        assert_eq!(list.pop(), Some(42));
-    //    }
-    //
+    #[test]
+    fn peek() {
+        let mut list = DoublyLinkedList::new();
+        list.push_front(1);
+        list.push_front(2);
+        list.push_front(3);
+
+        assert_eq!(&*list.peek_front().unwrap(), &3);
+        assert_eq!(&*list.peek_front().unwrap(), &3);
+
+        assert_eq!(&*list.peek_back().unwrap(), &1);
+        assert_eq!(&*list.peek_back().unwrap(), &1);
+
+        list.push_front(4);
+        list.push_front(5);
+
+        assert_eq!(&*list.peek_front().unwrap(), &5);
+        assert_eq!(&*list.peek_front().unwrap(), &5);
+
+        assert_eq!(&*list.peek_back().unwrap(), &1);
+        assert_eq!(&*list.peek_back().unwrap(), &1);
+
+        list.push_back(6);
+        list.push_back(7);
+
+        assert_eq!(&*list.peek_front().unwrap(), &5);
+        assert_eq!(&*list.peek_front().unwrap(), &5);
+
+        assert_eq!(&*list.peek_back().unwrap(), &7);
+        assert_eq!(&*list.peek_back().unwrap(), &7);
+    }
+
+    #[test]
+    fn peek_mut() {
+        let mut list = DoublyLinkedList::new();
+        list.push_front(1);
+        list.push_front(2);
+        list.push_front(3);
+
+        assert_eq!(&*list.peek_front_mut().unwrap(), &mut 3);
+        assert_eq!(&*list.peek_front_mut().unwrap(), &mut 3);
+
+        assert_eq!(&*list.peek_back_mut().unwrap(), &mut 1);
+        assert_eq!(&*list.peek_back_mut().unwrap(), &mut 1);
+
+        list.push_front(4);
+        list.push_front(5);
+
+        assert_eq!(&*list.peek_front_mut().unwrap(), &mut 5);
+
+        *list.peek_front_mut().unwrap() = 50;
+        assert_eq!(&*list.peek_front_mut().unwrap(), &mut 50);
+
+        assert_eq!(&*list.peek_back_mut().unwrap(), &mut 1);
+        assert_eq!(&*list.peek_back_mut().unwrap(), &mut 1);
+
+        list.push_back(6);
+        list.push_back(7);
+
+        assert_eq!(&*list.peek_front_mut().unwrap(), &mut 50);
+        assert_eq!(&*list.peek_front_mut().unwrap(), &mut 50);
+
+        assert_eq!(&*list.peek_back_mut().unwrap(), &mut 7);
+
+        *list.peek_back_mut().unwrap() = 100;
+        assert_eq!(&*list.peek_back_mut().unwrap(), &mut 100);
+    }
+
     #[test]
     fn rev() {
         let mut list = doubly_linked_list![1, 2, 3, 4, 5, 6];
