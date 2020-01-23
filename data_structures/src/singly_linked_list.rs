@@ -45,8 +45,10 @@
 //! use data_structures::singly_linked_list;
 //!
 //! let mut list = singly_linked_list![1, 2, 3, 4, 5];
+//!
 //! println!("{:?}", list);
-//! // Prints: H:| 5 | -> | 4 | -> | 3 | -> | 2 | -> | 1 |:T
+//!
+//! // Prints: H: | 5 | -> | 4 | -> | 3 | -> | 2 | -> | 1 | :T
 //! ```
 //!
 //! [`new`]: ./struct.SinglyLinkedList.html#method.new
@@ -54,6 +56,7 @@
 //! [`pop`]: ./struct.SinglyLinkedList.html#method.pop
 //! [`singly_linked_list!`]: ../macro.singly_linked_list.html
 
+use std::default::Default;
 use std::fmt::{Debug, Error, Formatter};
 
 /// # Safe implementation of a Singly Linked List with single ownership
@@ -76,6 +79,8 @@ use std::fmt::{Debug, Error, Formatter};
 /// list.push(30); // <- This is our head
 ///
 /// assert_eq!(list.len(), 3);
+/// println!("{:?}", list); // Debug Print
+/// // Prints: H: | 30 | -> | 20 | -> | 10 | :T
 ///
 /// let element = list.pop(); // We pop the head off the list
 /// assert_eq!(element, Some(30));
@@ -97,6 +102,23 @@ use std::fmt::{Debug, Error, Formatter};
 /// assert_eq!(list.pop(), Some(3));
 /// ```
 ///
+/// ## Iterators
+/// 3 different kinds of iterators are provided:
+/// - `IntoIter` - [`.into_iter()`]: which consumes the list of type `T` and provides an iterator yielding `T`
+/// - `Iter` - [`.iter()`]:  which does not consume the list provides an iterator yielding `&T`
+/// - `IterMut` - [`.iter_mut()`]:  which does not consume the list provides an iterator yielding `&mut T`
+///
+/// As `IntoIterator` has been implemented, the list can also be used in traditional `for` loops:
+/// ```rust
+/// #[macro_use]
+/// use data_structures::singly_linked_list;
+///
+/// let mut list = singly_linked_list![1, 2, 3];
+///
+/// for el in list {
+///     println!("{}", el)
+/// }
+/// ```
 ///
 /// ## Use as a Stack
 ///
@@ -106,11 +128,16 @@ use std::fmt::{Debug, Error, Formatter};
 /// use data_structures::singly_linked_list;
 ///
 /// let mut stack = singly_linked_list![1, 2, 3, 4, 5];
+///
 /// while let Some(head) = stack.pop() {
 ///     // Prints: 5, 4, 3, 2, 1
 ///     println!("{}", head);
 /// }
 /// ```
+/// [`.into_iter()`]: ./struct.SinglyLinkedList.html#impl-IntoIterator
+/// [`.iter()`]: ./struct.SinglyLinkedList.html#method.iter
+/// [`.iter_mut()`]: ./struct.SinglyLinkedList.html#method.iter_mut
+#[derive(Default)]
 pub struct SinglyLinkedList<T> {
     head: Link<T>,
     length: usize,
@@ -153,6 +180,24 @@ impl<T> SinglyLinkedList<T> {
     /// ```
     pub fn len(&self) -> usize {
         self.length
+    }
+
+    /// Returns true if the list is empty, false if it contains 1 or more elements
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::singly_linked_list;
+    /// use data_structures::singly_linked_list::SinglyLinkedList;
+    ///
+    /// let mut list = singly_linked_list![1, 2, 3];
+    /// assert_eq!(list.is_empty(), false);
+    ///
+    /// let mut list: SinglyLinkedList<i32> = singly_linked_list![];
+    /// assert_eq!(list.is_empty(), true);
+    /// ```
+    pub fn is_empty(&self) -> bool {
+        self.length == 0 && self.head.is_none()
     }
 
     /// Pushes the provided element to the head of the list
@@ -230,7 +275,9 @@ impl<T> SinglyLinkedList<T> {
 
         while current_ptr.is_some() {
             following_ptr = current_ptr.as_mut().map(|node| node.next.take()).flatten();
-            current_ptr.as_mut().map(|node| node.next = previous_ptr);
+            if let Some(node) = current_ptr.as_mut() {
+                node.next = previous_ptr;
+            }
             previous_ptr = current_ptr;
             current_ptr = following_ptr;
         }
@@ -270,26 +317,6 @@ impl<T> SinglyLinkedList<T> {
     /// ```
     pub fn peek_mut(&mut self) -> Option<&mut T> {
         self.head.as_mut().take().map(|node| &mut node.data)
-    }
-
-    /// Returns an iterator over the list, consuming the list in the process
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// #[macro_use]
-    /// use data_structures::singly_linked_list;
-    ///
-    /// let mut list = singly_linked_list![1, 5, 10];
-    /// let mut iter = list.into_iter();
-    ///
-    /// assert_eq!(iter.next(), Some(10));
-    /// assert_eq!(iter.next(), Some(5));
-    /// assert_eq!(iter.next(), Some(1));
-    /// assert_eq!(iter.next(), None);
-    /// ```
-    pub fn into_iter(self) -> IntoIter<T> {
-        IntoIter(self)
     }
 
     /// Returns an iterator over the list, providing a reference to each element
@@ -381,7 +408,7 @@ impl<T> SinglyLinkedList<T> {
     /// assert_eq!(list.nth(2), Some(&1));
     /// ```
     pub fn nth(&self, index: usize) -> Option<&T> {
-        if !(index < self.length) {
+        if index >= self.length {
             return None;
         }
         self.iter().nth(index)
@@ -406,7 +433,7 @@ impl<T> SinglyLinkedList<T> {
     /// assert_eq!(list.nth_mut(2), Some(&mut 1));
     /// ```
     pub fn nth_mut(&mut self, index: usize) -> Option<&mut T> {
-        if !(index < self.length) {
+        if index >= self.length {
             return None;
         }
         self.iter_mut().nth(index)
@@ -531,7 +558,7 @@ impl<T> SinglyLinkedList<T> {
         // Todo - Not sure this is the most reliable way to do this, but
         // it's more efficient than iterating over both new lists and counting elements
         new_list.length = self.length - index;
-        self.length = self.length - new_list.length;
+        self.length -= new_list.length;
 
         new_list
     }
@@ -600,6 +627,15 @@ macro_rules! singly_linked_list {
             temp_list
         }
     };
+}
+
+impl<T> IntoIterator for SinglyLinkedList<T> {
+    type Item = T;
+    type IntoIter = IntoIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        IntoIter(self)
+    }
 }
 
 impl<T: Debug> Debug for SinglyLinkedList<T> {

@@ -44,8 +44,9 @@
 //! [`singly_linked_list!`]: ../macro.singly_linked_list.html
 
 use std::cell::RefCell;
+use std::default::Default;
 use std::fmt::{Debug, Error, Formatter};
-use std::rc::{Rc, Weak};
+use std::rc::Rc;
 
 /// # Safe implementation of a Singly Linked List with single ownership
 ///
@@ -105,6 +106,7 @@ use std::rc::{Rc, Weak};
 ///     println!("{}", head);
 /// }
 /// ```
+#[derive(Default)]
 pub struct DoublyLinkedList<T> {
     head: Link<T>,
     tail: Link<T>,
@@ -114,7 +116,7 @@ pub struct DoublyLinkedList<T> {
 struct Node<T> {
     data: T,
     next: Link<T>,
-    prev: Option<Weak<RefCell<Node<T>>>>,
+    prev: Link<T>,
 }
 
 type Link<T> = Option<Rc<RefCell<Node<T>>>>;
@@ -152,6 +154,24 @@ impl<T> DoublyLinkedList<T> {
         self.length
     }
 
+    /// Returns true if the list is empty, false if it contains 1 or more elements
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::doubly_linked_list;
+    /// use data_structures::doubly_linked_list::DoublyLinkedList;
+    ///
+    /// let mut list = doubly_linked_list![1, 2, 3];
+    /// assert_eq!(list.is_empty(), false);
+    ///
+    /// let mut list: DoublyLinkedList<i32> = doubly_linked_list![];
+    /// assert_eq!(list.is_empty(), true);
+    /// ```
+    pub fn is_empty(&self) -> bool {
+        self.length == 0 && self.head.is_none() && self.tail.is_none()
+    }
+
     /// Pushes the provided element to the head of the list
     ///
     /// # Panics
@@ -172,7 +192,7 @@ impl<T> DoublyLinkedList<T> {
         let new_node = Node::new(data);
         match self.head.take() {
             Some(old_head) => {
-                old_head.borrow_mut().prev = Some(Rc::downgrade(&Rc::clone(&new_node)));
+                old_head.borrow_mut().prev = Some(Rc::clone(&new_node));
                 new_node.borrow_mut().next = Some(old_head);
                 self.head = Some(new_node);
             }
@@ -221,7 +241,7 @@ impl<T> DoublyLinkedList<T> {
         })
     }
 
-    /// Pushes the provided element to the head of the list
+    /// Pushes the provided element to the tail of the list
     ///
     /// # Panics
     /// Panics if the number of elements in the list overflows a `usize`
@@ -242,7 +262,7 @@ impl<T> DoublyLinkedList<T> {
         let new_node = Node::new(data);
         match self.tail.take() {
             Some(old_tail) => {
-                new_node.borrow_mut().prev = Some(Rc::downgrade(&Rc::clone(&old_tail)));
+                new_node.borrow_mut().prev = Some(Rc::clone(&old_tail));
                 old_tail.borrow_mut().next = Some(Rc::clone(&new_node));
                 self.tail = Some(new_node);
             }
@@ -254,7 +274,7 @@ impl<T> DoublyLinkedList<T> {
         self.length += 1;
     }
 
-    /// Pops the element off the head of the list and returns it, returning `None` if the list
+    /// Pops the element off the tail of the list and returns it, returning `None` if the list
     /// is empty.
     ///
     /// # Examples
@@ -262,33 +282,19 @@ impl<T> DoublyLinkedList<T> {
     /// #[macro_use]
     /// use data_structures::doubly_linked_list;
     ///
-    /// let mut list = doubly_linked_list![1, 5, 10, 25];
-    ///
-    /// println!("{:?}", list);
+    /// let mut list = doubly_linked_list![1, 5, 10];
     ///
     /// assert_eq!(list.pop_back(), Some(1));
-    /// println!("First {:?}", list);
     /// assert_eq!(list.pop_back(), Some(5));
-    /// println!("Second {:?}", list);
     /// assert_eq!(list.pop_back(), Some(10));
-    /// println!("Third {:?}", list);
-    /// assert_eq!(list.pop_back(), Some(25));
-    /// println!("Empty {:?}", list);
     /// assert_eq!(list.pop_back(), None);
     /// ```
     pub fn pop_back(&mut self) -> Option<T> {
         self.tail.take().map(|old_tail| {
             match old_tail.borrow_mut().prev.take() {
                 Some(new_tail) => {
-                    let upgraded_tail = match new_tail.upgrade() {
-                        Some(tail) => {
-                            RefCell::borrow_mut(&tail).next.take();
-                            Some(tail)
-                        }
-                        None => None,
-                    };
-
-                    self.tail = upgraded_tail;
+                    RefCell::borrow_mut(&new_tail).next.take();
+                    self.tail = Some(new_tail);
                 }
                 None => {
                     self.head.take();
@@ -305,36 +311,50 @@ impl<T> DoublyLinkedList<T> {
         })
     }
 
-    //    /// Iterates over the list, reversing the links between all elements. The head becomes
-    //    /// the tail and the tail becomes the head.
-    //    ///
-    //    /// # Examples
-    //    /// ```rust
-    //    /// #[macro_use]
-    //    /// use data_structures::singly_linked_list;
-    //    ///
-    //    /// let mut list = singly_linked_list![1, 5, 10]; // 10 is currently the head
-    //    ///
-    //    /// list.rev();
-    //    ///
-    //    /// assert_eq!(list.pop(), Some(1)); // After reversing, 1 is the head
-    //    /// assert_eq!(list.pop(), Some(5));
-    //    /// assert_eq!(list.pop(), Some(10));
-    //    /// assert_eq!(list.pop(), None);
-    //    /// ```
-    //    pub fn rev(&mut self) {
-    //        let mut previous_ptr = None;
-    //        let mut current_ptr = self.head.take();
-    //        let mut following_ptr;
-    //
-    //        while current_ptr.is_some() {
-    //            following_ptr = current_ptr.as_mut().map(|node| node.next.take()).flatten();
-    //            current_ptr.as_mut().map(|node| node.next = previous_ptr);
-    //            previous_ptr = current_ptr;
-    //            current_ptr = following_ptr;
-    //        }
-    //        self.head = previous_ptr;
-    //    }
+    /// Iterates over the list, reversing the links between all elements. The head becomes
+    /// the tail and the tail becomes the head.
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::doubly_linked_list;
+    ///
+    /// let mut list = doubly_linked_list![1, 5, 10]; // 10 is currently the head
+    ///
+    /// list.rev();
+    /// println!("{:?}", list);
+    ///
+    /// assert_eq!(list.pop_front(), Some(1)); // After reversing, 1 is the head
+    /// assert_eq!(list.pop_back(), Some(10)); // 10 is the tail
+    /// assert_eq!(list.pop_front(), Some(5));
+    /// assert_eq!(list.pop_front(), None);
+    /// ```
+    pub fn rev(&mut self) {
+        let head = self.head.take();
+        let tail = self.tail.take();
+
+        let mut node_to_swap = None;
+        match &head {
+            Some(node) => {
+                node_to_swap = Some(Rc::clone(node));
+            }
+            None => {}
+        }
+
+        while let Some(node) = node_to_swap.clone() {
+            {
+                let mut borrowed_node = RefCell::borrow_mut(&node);
+                let next_node = borrowed_node.prev.take();
+
+                borrowed_node.prev = borrowed_node.next.take();
+                borrowed_node.next = next_node;
+            }
+            node_to_swap = node.borrow().prev.clone();
+        }
+
+        self.head = tail;
+        self.tail = head;
+    }
     //
     //    /// Returns a reference to the next element in the list
     //    ///
@@ -963,32 +983,32 @@ mod tests {
     //        assert_eq!(list.pop(), Some(42));
     //    }
     //
-    //    #[test]
-    //    fn rev() {
-    //        let mut list = DoublyLinkedList::new();
-    //        list.push(1);
-    //        list.push(2);
-    //        list.push(3);
-    //
-    //        list.rev();
-    //        assert_eq!(list.len(), 3);
-    //
-    //        assert_eq!(list.pop(), Some(1));
-    //        assert_eq!(list.pop(), Some(2));
-    //        assert_eq!(list.len(), 1);
-    //
-    //        list.push(4);
-    //        list.push(5);
-    //        assert_eq!(list.len(), 3);
-    //
-    //        list.rev();
-    //        assert_eq!(list.len(), 3);
-    //
-    //        assert_eq!(list.pop(), Some(3));
-    //        assert_eq!(list.pop(), Some(4));
-    //        assert_eq!(list.pop(), Some(5));
-    //        assert_eq!(list.pop(), None);
-    //    }
+    #[test]
+    fn rev() {
+        let mut list = doubly_linked_list![1, 2, 3, 4, 5, 6];
+        assert_eq!(list.len(), 6);
+        println!("Before Rev: {:?}", list);
+
+        list.rev();
+        println!("After Rev: {:?}", list);
+        assert_eq!(list.len(), 6);
+
+        assert_eq!(list.pop_front(), Some(1));
+        assert_eq!(list.pop_back(), Some(6));
+        assert_eq!(list.len(), 4);
+        //
+        //        list.push(4);
+        //        list.push(5);
+        //        assert_eq!(list.len(), 3);
+        //
+        //        list.rev();
+        //        assert_eq!(list.len(), 3);
+        //
+        //        assert_eq!(list.pop(), Some(3));
+        //        assert_eq!(list.pop(), Some(4));
+        //        assert_eq!(list.pop(), Some(5));
+        //        assert_eq!(list.pop(), None);
+    }
     //
     //    #[test]
     //    fn nth() {
