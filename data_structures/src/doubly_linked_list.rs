@@ -828,36 +828,18 @@ mod tests {
         assert_eq!(list.pop_back(), Some(1));
         assert_eq!(list.pop_back(), None);
     }
-    //
-    //    #[test]
-    //    fn iter() {
-    //        let mut list = DoublyLinkedList::new();
-    //        list.push(1);
-    //        list.push(2);
-    //        list.push(3);
-    //
-    //        let mut iter = list.iter();
-    //
-    //        assert_eq!(iter.next(), Some(&3));
-    //        assert_eq!(iter.next(), Some(&2));
-    //        assert_eq!(iter.next(), Some(&1));
-    //        assert_eq!(iter.next(), None);
-    //    }
-    //
-    //    #[test]
-    //    fn into_iter() {
-    //        let mut list = DoublyLinkedList::new();
-    //        list.push(1);
-    //        list.push(2);
-    //        list.push(3);
-    //
-    //        let mut iter = list.into_iter();
-    //
-    //        assert_eq!(iter.next(), Some(3));
-    //        assert_eq!(iter.next(), Some(2));
-    //        assert_eq!(iter.next(), Some(1));
-    //        assert_eq!(iter.next(), None);
-    //    }
+
+    #[test]
+    fn into_iter() {
+        let list = doubly_linked_list![1, 2, 3];
+
+        let mut iter = list.into_iter();
+
+        assert_eq!(iter.next(), Some(3));
+        assert_eq!(iter.next(), Some(2));
+        assert_eq!(iter.next(), Some(1));
+        assert_eq!(iter.next(), None);
+    }
 
     #[test]
     fn peek() {
@@ -931,27 +913,23 @@ mod tests {
     fn rev() {
         let mut list = doubly_linked_list![1, 2, 3, 4, 5, 6];
         assert_eq!(list.len(), 6);
-        println!("Before Rev: {:?}", list);
 
         list.rev();
-        println!("After Rev: {:?}", list);
         assert_eq!(list.len(), 6);
 
         assert_eq!(list.pop_front(), Some(1));
         assert_eq!(list.pop_back(), Some(6));
         assert_eq!(list.len(), 4);
-        //
-        //        list.push(4);
-        //        list.push(5);
-        //        assert_eq!(list.len(), 3);
-        //
-        //        list.rev();
-        //        assert_eq!(list.len(), 3);
-        //
-        //        assert_eq!(list.pop(), Some(3));
-        //        assert_eq!(list.pop(), Some(4));
-        //        assert_eq!(list.pop(), Some(5));
-        //        assert_eq!(list.pop(), None);
+
+        list.push_front(7);
+        list.push_front(8);
+        assert_eq!(list.len(), 6);
+
+        list.rev();
+        assert_eq!(list.len(), 6);
+
+        assert_eq!(list.pop_back(), Some(8));
+        assert_eq!(list.pop_front(), Some(5));
     }
     //
     //    #[test]
