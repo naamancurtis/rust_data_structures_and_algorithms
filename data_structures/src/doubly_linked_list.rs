@@ -455,96 +455,7 @@ impl<T> DoublyLinkedList<T> {
             .as_ref()
             .map(|node| RefMut::map(RefCell::borrow_mut(node), |node| &mut node.data))
     }
-    //
-    //    /// Returns an iterator over the list, consuming the list in the process
-    //    ///
-    //    /// # Examples
-    //    ///
-    //    /// ```rust
-    //    /// #[macro_use]
-    //    /// use data_structures::singly_linked_list;
-    //    ///
-    //    /// let mut list = singly_linked_list![1, 5, 10];
-    //    /// let mut iter = list.into_iter();
-    //    ///
-    //    /// assert_eq!(iter.next(), Some(10));
-    //    /// assert_eq!(iter.next(), Some(5));
-    //    /// assert_eq!(iter.next(), Some(1));
-    //    /// assert_eq!(iter.next(), None);
-    //    /// ```
-    //    pub fn into_iter(self) -> IntoIter<T> {
-    //        IntoIter(self)
-    //    }
-    //
-    //    /// Returns an iterator over the list, providing a reference to each element
-    //    ///
-    //    /// # Examples
-    //    ///
-    //    /// ```rust
-    //    /// #[macro_use]
-    //    /// use data_structures::singly_linked_list;
-    //    ///
-    //    /// let mut list = singly_linked_list![1, 5, 10];
-    //    /// let mut iter = list.iter();
-    //    ///
-    //    /// assert_eq!(iter.next(), Some(&10));
-    //    /// assert_eq!(iter.next(), Some(&5));
-    //    /// assert_eq!(iter.next(), Some(&1));
-    //    /// assert_eq!(iter.next(), None);
-    //    ///
-    //    /// assert_eq!(list.len(), 3); // Note: the list hasn't been consumed
-    //    /// assert_eq!(list.pop(), Some(10));
-    //    /// ```
-    //    pub fn iter(&self) -> Iter<T> {
-    //        Iter {
-    //            next: self.head.as_ref().map(|node| &**node),
-    //        }
-    //    }
-    //
-    //    /// Returns an iterator over the list, providing a mutable reference to each element
-    //    ///
-    //    /// # Examples
-    //    ///
-    //    /// Mutating a single value
-    //    /// ```rust
-    //    /// #[macro_use]
-    //    /// use data_structures::singly_linked_list;
-    //    ///
-    //    /// let mut list = singly_linked_list![1, 5, 10];
-    //    /// let mut iter = list.iter_mut();
-    //    ///
-    //    /// assert_eq!(iter.next(), Some(&mut 10));
-    //    /// iter.next().map(|val| *val = 50); // Mutate 5 to be 50;
-    //    ///
-    //    /// assert_eq!(iter.next(), Some(&mut 1));
-    //    /// assert_eq!(iter.next(), None);
-    //    ///
-    //    /// assert_eq!(list.len(), 3); // Note: the list hasn't been consumed
-    //    /// assert_eq!(list.pop(), Some(10));
-    //    /// assert_eq!(list.pop(), Some(50));
-    //    /// assert_eq!(list.pop(), Some(1));
-    //    /// ```
-    //    ///
-    //    /// Mutating each value in the list
-    //    /// ```rust
-    //    /// #[macro_use]
-    //    /// use data_structures::singly_linked_list;
-    //    ///
-    //    /// let mut list = singly_linked_list![1, 5, 10];
-    //    /// let mut iter = list.iter_mut();
-    //    ///
-    //    /// iter.for_each(|val| *val *= 10);
-    //    ///
-    //    /// assert_eq!(list.len(), 3);
-    //    /// assert_eq!(list.pop(), Some(100));
-    //    /// assert_eq!(list.pop(), Some(50));
-    //    /// assert_eq!(list.pop(), Some(10));
-    //    /// ```
-    //    pub fn iter_mut(&mut self) -> IterMut<T> {
-    //        IterMut {
-    //            next: self.head.as_mut().map(|node| &mut **node),
-    //        }
-    //    }
+
     //
     //    /// Starting with the head at index `0`, iterates through the list returning a reference to
     //    /// the element at the provided index or `None` if that index doesn't exist
@@ -752,26 +663,26 @@ impl<T> Drop for DoublyLinkedList<T> {
 ///
 /// ```rust
 /// #[macro_use]
-/// use data_structures::singly_linked_list;
-/// use data_structures::singly_linked_list::SinglyLinkedList;
+/// use data_structures::doubly_linked_list;
+/// use data_structures::doubly_linked_list::DoublyLinkedList;
 ///
 /// // Tail: 1
 /// // Head: 5
 ///
 /// // Macro notation:
-/// let mut list = singly_linked_list![1, 2, 3, 4, 5];
+/// let mut list = doubly_linked_list![1, 2, 3, 4, 5];
 ///
-/// assert_eq!(list.pop(), Some(5));
+/// assert_eq!(list.pop_front(), Some(5));
 ///
 /// // Longhand notation:
-/// let mut list = SinglyLinkedList::new();
-/// list.push(1);
-/// list.push(2);
-/// list.push(3);
-/// list.push(4);
-/// list.push(5);
+/// let mut list = DoublyLinkedList::new();
+/// list.push_front(1);
+/// list.push_front(2);
+/// list.push_front(3);
+/// list.push_front(4);
+/// list.push_front(5);
 ///
-/// assert_eq!(list.pop(), Some(5));
+/// assert_eq!(list.pop_front(), Some(5));
 /// ```
 #[macro_export]
 macro_rules! doubly_linked_list {
@@ -797,95 +708,46 @@ impl<T> Node<T> {
     }
 }
 
-//// ============ Iterator Wrappers ============
-//
-///// An iterator that moves out of a SinglyLinkedList, consuming it in the process
-/////
-///// # Examples
-/////
-///// ```rust
-///// #[macro_use]
-///// use data_structures::singly_linked_list;
-/////
-///// let mut list = singly_linked_list![1, 5, 10, 25, 50];
-/////
-///// let mut iter = list.into_iter(); // list has been `moved` and can no longer be used
-/////
-///// assert_eq!(iter.next(), Some(50));
-///// ```
-//pub struct IntoIter<T>(DoublyLinkedList<T>);
-//
-///// An iterator that provides immutable references over a SinglyLinkedList, it does not consume it in the process
-/////
-///// # Examples
-/////
-///// ```rust
-///// #[macro_use]
-///// use data_structures::singly_linked_list;
-/////
-///// let mut list = singly_linked_list![1, 5, 10, 25, 50];
-/////
-///// let mut iter = list.iter();
-/////
-///// assert_eq!(iter.next(), Some(&50));
-///// assert_eq!(list.len(), 5); // list hasn't been consumed
-///// ```
-//pub struct Iter<'a, T> {
-//    next: Option<&'a Node<T>>,
-//}
-//
-///// An iterator that provides mutable references over a SinglyLinkedList, it does not consume it in the process
-/////
-///// # Examples
-/////
-///// ```rust
-///// #[macro_use]
-///// use data_structures::singly_linked_list;
-/////
-///// let mut list = singly_linked_list![1, 5, 10, 25, 50];
-/////
-///// let mut iter = list.iter_mut();
-/////
-///// assert_eq!(iter.next(), Some(&mut 50));
-/////
-///// iter.next().map(|val| *val *= 10); // lets mutate the second value
-/////
-///// assert_eq!(list.pop(), Some(50)); // the element hasn't been consumed
-///// assert_eq!(list.pop(), Some(250)); // here is our mutated value
-///// ```
-//pub struct IterMut<'a, T> {
-//    next: Option<&'a mut Node<T>>,
-//}
-//
-//impl<T> Iterator for IntoIter<T> {
-//    type Item = T;
-//
-//    fn next(&mut self) -> Option<Self::Item> {
-//        self.0.pop()
-//    }
-//}
-//
-//impl<'a, T> Iterator for Iter<'a, T> {
-//    type Item = &'a T;
-//
-//    fn next(&mut self) -> Option<Self::Item> {
-//        self.next.map(|node| {
-//            self.next = node.next.as_ref().map(|new_node| &**new_node);
-//            &node.data
-//        })
-//    }
-//}
-//
-//impl<'a, T> Iterator for IterMut<'a, T> {
-//    type Item = &'a mut T;
-//
-//    fn next(&mut self) -> Option<Self::Item> {
-//        self.next.take().map(|node| {
-//            self.next = node.next.as_mut().map(|new_node| &mut **new_node);
-//            &mut node.data
-//        })
-//    }
-//}
+// ============ Iterator Wrappers ============
+
+/// An iterator that moves out of a DoublyLinkedList, consuming it in the process
+///
+/// # Examples
+///
+/// ```rust
+/// #[macro_use]
+/// use data_structures::doubly_linked_list;
+///
+/// let mut list = doubly_linked_list![1, 5, 10, 25, 50];
+///
+/// let mut iter = list.into_iter(); // list has been `moved` and can no longer be used
+///
+/// assert_eq!(iter.next(), Some(50));
+/// ```
+pub struct IntoIter<T>(DoublyLinkedList<T>);
+
+impl<T> IntoIterator for DoublyLinkedList<T> {
+    type Item = T;
+    type IntoIter = IntoIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        IntoIter(self)
+    }
+}
+
+impl<T> Iterator for IntoIter<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.pop_front()
+    }
+}
+
+impl<T> DoubleEndedIterator for IntoIter<T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.0.pop_back()
+    }
+}
 
 // ============ /Iterator Wrappers ============
 
@@ -996,22 +858,7 @@ mod tests {
     //        assert_eq!(iter.next(), Some(1));
     //        assert_eq!(iter.next(), None);
     //    }
-    //
-    //    #[test]
-    //    fn iter_mut() {
-    //        let mut list = DoublyLinkedList::new();
-    //        list.push(1);
-    //        list.push(2);
-    //        list.push(3);
-    //
-    //        let mut iter = list.iter_mut();
-    //
-    //        assert_eq!(iter.next(), Some(&mut 3));
-    //        assert_eq!(iter.next(), Some(&mut 2));
-    //        assert_eq!(iter.next(), Some(&mut 1));
-    //        assert_eq!(iter.next(), None);
-    //    }
-    //
+
     #[test]
     fn peek() {
         let mut list = DoublyLinkedList::new();
