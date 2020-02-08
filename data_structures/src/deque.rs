@@ -49,7 +49,7 @@ use std::fmt::{Debug, Error, Formatter};
 use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
 
-/// # Safe implementation of a Double-Ended Queue
+/// # A safe implementation of a Double-Ended Queue
 ///
 /// This queue maintains a pointers to the element at the *head* and *tail* of the queue. In turn each element
 /// maintains a pointer to the element immediately before and after it.
@@ -166,6 +166,7 @@ impl<T> Deque<T> {
     /// let mut queue: Deque<i32> = Deque::new();
     /// assert_eq!(queue.len(), 0);
     /// ```
+    #[inline]
     pub fn new() -> Self {
         Self {
             head: None,
@@ -185,6 +186,7 @@ impl<T> Deque<T> {
     ///
     /// assert_eq!(queue.len(), 3);
     /// ```
+    #[inline]
     pub fn len(&self) -> usize {
         self.length
     }
@@ -203,6 +205,7 @@ impl<T> Deque<T> {
     /// let mut queue: Deque<i32> = deque![];
     /// assert_eq!(queue.is_empty(), true);
     /// ```
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.head.is_none()
     }
@@ -220,6 +223,7 @@ impl<T> Deque<T> {
     /// queue.clear();
     /// assert_eq!(queue.is_empty(), true);
     /// ```
+    #[inline]
     pub fn clear(&mut self) {
         *self = Self::new();
     }
@@ -240,6 +244,7 @@ impl<T> Deque<T> {
     ///
     /// assert_eq!(queue.len(), 3);
     /// ```
+    #[inline]
     pub fn push_front(&mut self, data: T) {
         let new_node = Node::new(data);
         match self.head.take() {
@@ -271,6 +276,7 @@ impl<T> Deque<T> {
     /// assert_eq!(queue.pop_front(), Some(1));
     /// assert_eq!(queue.pop_front(), None);
     /// ```
+    #[inline]
     pub fn pop_front(&mut self) -> Option<T> {
         self.head.take().map(|old_node| {
             match old_node.borrow_mut().next.take() {
@@ -310,6 +316,7 @@ impl<T> Deque<T> {
     /// assert_eq!(queue.len(), 3);
     /// assert_eq!(queue.pop_front(),Some(1));
     /// ```
+    #[inline]
     pub fn push_back(&mut self, data: T) {
         let new_node = Node::new(data);
         match self.tail.take() {
@@ -341,6 +348,7 @@ impl<T> Deque<T> {
     /// assert_eq!(queue.pop_back(), Some(10));
     /// assert_eq!(queue.pop_back(), None);
     /// ```
+    #[inline]
     pub fn pop_back(&mut self) -> Option<T> {
         self.tail.take().map(|old_tail| {
             match old_tail.borrow_mut().prev.take() {
@@ -386,6 +394,7 @@ impl<T> Deque<T> {
     /// assert_eq!(queue.pop_front(), Some(5));
     /// assert_eq!(queue.pop_front(), None);
     /// ```
+    #[inline]
     pub fn rev(&mut self) {
         let head = self.head.take();
         let tail = self.tail.take();
@@ -431,6 +440,7 @@ impl<T> Deque<T> {
     ///
     /// assert_eq!(&* queue.peek_front().unwrap(), &10); // .peek() doesn't consume the element
     /// ```
+    #[inline]
     pub fn peek_front(&self) -> Option<impl Deref<Target = T> + '_> {
         self.head
             .as_ref()
@@ -454,6 +464,7 @@ impl<T> Deque<T> {
     ///
     /// assert_eq!(queue.pop_front(), Some(50));
     /// ```
+    #[inline]
     pub fn peek_front_mut(&mut self) -> Option<impl DerefMut<Target = T> + '_> {
         self.head
             .as_ref()
@@ -478,6 +489,7 @@ impl<T> Deque<T> {
     ///
     /// assert_eq!(&* queue.peek_back().unwrap(), &1); // .peek() doesn't consume the element
     /// ```
+    #[inline]
     pub fn peek_back(&self) -> Option<impl Deref<Target = T> + '_> {
         self.tail
             .as_ref()
@@ -501,6 +513,7 @@ impl<T> Deque<T> {
     ///
     /// assert_eq!(queue.pop_back(), Some(25));
     /// ```
+    #[inline]
     pub fn peek_back_mut(&mut self) -> Option<impl DerefMut<Target = T> + '_> {
         self.tail
             .as_ref()
@@ -520,6 +533,7 @@ impl<T> Deque<T> {
     ///
     /// assert_eq!(queue.into_vec(), vec![50, 25, 10, 5, 1])
     /// ```
+    #[inline]
     pub fn into_vec(self) -> Vec<T> {
         self.into_iter().collect()
     }

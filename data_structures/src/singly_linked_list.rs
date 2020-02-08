@@ -3,8 +3,8 @@
 //! A growable singly linked list with heap allocated contents.
 //!
 //! It has `O(1)` access, pushing and popping from the **head** element. Interacting with any
-//! value in the list other than the head will require `O(k)` time to iterate through the list
-//! where `k` is the desired index of the element _(`O(n)` worst case)_.   
+//! value in the list other than the head will require inefficient iteration through the list
+//! to find the relevant value (no random access)  
 //!
 //! # Examples
 //! You can explicitly create a new list with [`new`]
@@ -59,7 +59,7 @@
 use std::default::Default;
 use std::fmt::{Debug, Error, Formatter};
 
-/// # Safe implementation of a Singly Linked List with single ownership
+/// # A safe implementation of a Singly Linked List
 ///
 /// This list maintains a pointer to the element at the *head* of the list, where each element
 /// maintains a subsequent pointer to the next element in the list. Interactions should ideally be
@@ -160,6 +160,7 @@ impl<T> SinglyLinkedList<T> {
     /// let mut list: SinglyLinkedList<i32> = SinglyLinkedList::new();
     /// assert_eq!(list.len(), 0);
     /// ```
+    #[inline]
     pub fn new() -> Self {
         Self {
             head: None,
@@ -178,6 +179,7 @@ impl<T> SinglyLinkedList<T> {
     ///
     /// assert_eq!(list.len(), 3);
     /// ```
+    #[inline]
     pub fn len(&self) -> usize {
         self.length
     }
@@ -196,6 +198,7 @@ impl<T> SinglyLinkedList<T> {
     /// let mut list: SinglyLinkedList<i32> = singly_linked_list![];
     /// assert_eq!(list.is_empty(), true);
     /// ```
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.length == 0 && self.head.is_none()
     }
@@ -214,6 +217,7 @@ impl<T> SinglyLinkedList<T> {
     /// list.push(5);
     /// list.push(10);
     /// ```
+    #[inline]
     pub fn push(&mut self, data: T) {
         let mut new_node = Node::new(data);
         match self.head.take() {
@@ -241,6 +245,7 @@ impl<T> SinglyLinkedList<T> {
     /// assert_eq!(list.pop(), Some(1));
     /// assert_eq!(list.pop(), None);
     /// ```
+    #[inline]
     pub fn pop(&mut self) -> Option<T> {
         self.head.take().map(|old_node| {
             self.head = old_node.next;
@@ -268,6 +273,7 @@ impl<T> SinglyLinkedList<T> {
     /// assert_eq!(list.pop(), Some(10));
     /// assert_eq!(list.pop(), None);
     /// ```
+    #[inline]
     pub fn rev(&mut self) {
         let mut previous_ptr = None;
         let mut current_ptr = self.head.take();
@@ -295,6 +301,7 @@ impl<T> SinglyLinkedList<T> {
     /// assert_eq!(list.peek(), Some(&10));
     /// assert_eq!(list.peek(), Some(&10)); // .peek() doesn't consume the element
     /// ```
+    #[inline]
     pub fn peek(&self) -> Option<&T> {
         self.head.as_ref().take().map(|node| &node.data)
     }
@@ -315,6 +322,7 @@ impl<T> SinglyLinkedList<T> {
     ///
     /// assert_eq!(list.pop(), Some(50));
     /// ```
+    #[inline]
     pub fn peek_mut(&mut self) -> Option<&mut T> {
         self.head.as_mut().take().map(|node| &mut node.data)
     }
@@ -338,6 +346,7 @@ impl<T> SinglyLinkedList<T> {
     /// assert_eq!(list.len(), 3); // Note: the list hasn't been consumed
     /// assert_eq!(list.pop(), Some(10));
     /// ```
+    #[inline]
     pub fn iter(&self) -> Iter<T> {
         Iter {
             next: self.head.as_ref().map(|node| &**node),
@@ -383,6 +392,7 @@ impl<T> SinglyLinkedList<T> {
     /// assert_eq!(list.pop(), Some(50));
     /// assert_eq!(list.pop(), Some(10));
     /// ```
+    #[inline]
     pub fn iter_mut(&mut self) -> IterMut<T> {
         IterMut {
             next: self.head.as_mut().map(|node| &mut **node),
@@ -407,6 +417,7 @@ impl<T> SinglyLinkedList<T> {
     /// assert_eq!(list.nth(3), None);
     /// assert_eq!(list.nth(2), Some(&1));
     /// ```
+    #[inline]
     pub fn nth(&self, index: usize) -> Option<&T> {
         if index >= self.length {
             return None;
@@ -432,6 +443,7 @@ impl<T> SinglyLinkedList<T> {
     /// assert_eq!(list.nth_mut(3), None);
     /// assert_eq!(list.nth_mut(2), Some(&mut 1));
     /// ```
+    #[inline]
     pub fn nth_mut(&mut self, index: usize) -> Option<&mut T> {
         if index >= self.length {
             return None;
@@ -464,6 +476,7 @@ impl<T> SinglyLinkedList<T> {
     /// assert_eq!(list.pop(), Some(1));
     /// assert_eq!(list.pop(), None);
     /// ```
+    #[inline]
     pub fn insert(&mut self, data: T, index: usize) {
         if index == 0 {
             self.push(data);
@@ -525,7 +538,8 @@ impl<T> SinglyLinkedList<T> {
     /// assert_eq!(split_list.pop(), Some(5));
     /// assert_eq!(split_list.pop(), Some(1));
     /// assert_eq!(split_list.pop(), None);
-    ///```
+    /// ```
+    #[inline]
     pub fn split(&mut self, index: usize) -> SinglyLinkedList<T> {
         let mut new_list = SinglyLinkedList::new();
         if index > self.length || index == 0 {
@@ -576,6 +590,7 @@ impl<T> SinglyLinkedList<T> {
     ///
     /// assert_eq!(list.into_vec(), vec![50, 25, 10, 5, 1])
     /// ```
+    #[inline]
     pub fn into_vec(self) -> Vec<T> {
         self.into_iter().collect()
     }
