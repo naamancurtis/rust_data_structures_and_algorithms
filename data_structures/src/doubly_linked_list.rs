@@ -134,18 +134,23 @@ use std::{mem, ptr};
 ///
 /// ## Iterating over a Doubly Linked List
 ///
-/// However, iteration in both directions is supported, however if required an alternate data structure
-/// might be more effective for the use case
+/// Iteration in both directions is supported for all three Iterators (consuming, reference and mutable reference)
 ///
 /// ```rust
 /// #[macro_use]
 /// use data_structures::doubly_linked_list;
 ///
-/// let list = doubly_linked_list![1, 2, 3];
+/// let mut list = doubly_linked_list![1, 2, 3];
 ///
-/// let mut iter = list.into_iter();
+/// let mut iter = list.iter(); // Non-consuming reference
+/// assert_eq!(iter.next(), Some(&3));
+/// assert_eq!(iter.next_back(), Some(&1));
 ///
+/// let mut iter = list.iter_mut(); // Non-consuming mutable reference
+/// assert_eq!(iter.next(), Some(&mut 3));
+/// assert_eq!(iter.next_back(), Some(&mut 1));
 ///
+/// let mut iter = list.into_iter(); // Consuming iterator
 /// assert_eq!(iter.next(), Some(3));
 /// assert_eq!(iter.next_back(), Some(1));
 ///
@@ -154,7 +159,7 @@ use std::{mem, ptr};
 /// assert_eq!(iter.next(), None);
 /// assert_eq!(iter.next_back(), None);
 /// ```
-///
+/// [`DoublyLinkedList!`]: ../macro.DoublyLinkedList.html
 #[derive(Default)]
 pub struct DoublyLinkedList<T> {
     head: Link<T>,
@@ -359,14 +364,8 @@ impl<T> DoublyLinkedList<T> {
     ///
     /// let mut list = doubly_linked_list![1, 5, 10];
     ///
-    /// // Because the element is wrapped in an `Rc<RefCell<T>>>` we need to `.unwrap()` the
-    /// // option and de-reference the `Ref` to receive the value
-    /// assert_eq!(*(list.peek_front().unwrap()), 10);
-    ///
-    /// // *list.peek_front().unwrap() = 50; - This value can't be assigned to (it will error) as it doesn't implement
-    /// // the DerefMut trait (see .peek_front_mut() if a mutable reference is needed)
-    ///
-    /// assert_eq!(&* list.peek_front().unwrap(), &10); // .peek() doesn't consume the element
+    /// assert_eq!(list.peek_front(), Some(&10));
+    /// assert_eq!(list.peek_front(), Some(&10)); // Peek is non-consuming
     /// ```
     pub fn peek_front(&self) -> Option<&T> {
         self.head.as_ref().map(|node| &node.data)
@@ -381,10 +380,11 @@ impl<T> DoublyLinkedList<T> {
     ///
     /// let mut list = doubly_linked_list![1, 5, 10];
     ///
-    /// assert_eq!(&mut *(list.peek_front_mut().unwrap()), &mut 10);
+    /// assert_eq!(list.peek_front_mut(), Some(&mut 10));
     /// assert_eq!(list.len(), 3);
     ///
     /// *list.peek_front_mut().unwrap() = 50;
+    /// assert_eq!(list.peek_front_mut(), Some(&mut 50)); // Element hasn't been consumed, but has been mutated
     /// assert_eq!(list.len(), 3);
     ///
     /// assert_eq!(list.pop_front(), Some(50));
@@ -402,14 +402,8 @@ impl<T> DoublyLinkedList<T> {
     ///
     /// let mut list = doubly_linked_list![1, 5, 10];
     ///
-    /// // Because the element is wrapped in an `Rc<RefCell<T>>>` we need to `.unwrap()` the
-    /// // option and de-reference the `Ref` to receive the value
-    /// assert_eq!(*(list.peek_back().unwrap()), 1);
-    ///
-    /// // *list.peek_back().unwrap() = 50; - This value can't be assigned to (it will error) as it doesn't implement
-    /// // DerefMut (see .peek_back_mut() if a mutable reference is needed)
-    ///
-    /// assert_eq!(&* list.peek_back().unwrap(), &1); // .peek() doesn't consume the element
+    /// assert_eq!(list.peek_back(), Some(&1));
+    /// assert_eq!(list.peek_back(), Some(&1)); // Peek is non-consuming
     /// ```
     pub fn peek_back(&self) -> Option<&T> {
         self.tail.as_ref().map(|node| &node.data)
@@ -424,18 +418,38 @@ impl<T> DoublyLinkedList<T> {
     ///
     /// let mut list = doubly_linked_list![1, 5, 10];
     ///
-    /// assert_eq!(&mut *(list.peek_back_mut().unwrap()), &mut 1);
+    /// assert_eq!(list.peek_back_mut(), Some(&mut 1));
     /// assert_eq!(list.len(), 3);
     ///
-    /// *list.peek_back_mut().unwrap() = 25;
+    /// *list.peek_back_mut().unwrap() = 50;
+    /// assert_eq!(list.peek_back_mut(), Some(&mut 50)); // Element hasn't been consumed, but has been mutated
     /// assert_eq!(list.len(), 3);
     ///
-    /// assert_eq!(list.pop_back(), Some(25));
+    /// assert_eq!(list.pop_back(), Some(50));
     /// ```
     pub fn peek_back_mut(&mut self) -> Option<&mut T> {
         self.tail.as_mut().map(|node| &mut node.data)
     }
 
+    /// Returns an iterator over the list, providing a reference to each element
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::doubly_linked_list;
+    ///
+    /// let mut list = doubly_linked_list![1, 5, 10];
+    /// let mut iter = list.iter();
+    ///
+    /// assert_eq!(iter.next(), Some(&10));
+    /// assert_eq!(iter.next(), Some(&5));
+    /// assert_eq!(iter.next(), Some(&1));
+    /// assert_eq!(iter.next(), None);
+    ///
+    /// assert_eq!(list.len(), 3); // Note: the list hasn't been consumed
+    /// assert_eq!(list.pop_front(), Some(10));
+    /// ```
     pub fn iter(&self) -> Iter<T> {
         Iter {
             head_next: &self.head,
@@ -443,6 +457,45 @@ impl<T> DoublyLinkedList<T> {
         }
     }
 
+    /// Returns an iterator over the list, providing a mutable reference to each element
+    ///
+    /// # Examples
+    ///
+    /// Mutating a single value
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::doubly_linked_list;
+    ///
+    /// let mut list = doubly_linked_list![1, 5, 10];
+    /// let mut iter = list.iter_mut();
+    ///
+    /// assert_eq!(iter.next(), Some(&mut 10));
+    /// iter.next().map(|val| *val = 50); // Mutate 5 to be 50;
+    ///
+    /// assert_eq!(iter.next(), Some(&mut 1));
+    /// assert_eq!(iter.next(), None);
+    ///
+    /// assert_eq!(list.len(), 3); // Note: the list hasn't been consumed
+    /// assert_eq!(list.pop_front(), Some(10));
+    /// assert_eq!(list.pop_front(), Some(50));
+    /// assert_eq!(list.pop_front(), Some(1));
+    /// ```
+    ///
+    /// Mutating each value in the list
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::singly_linked_list;
+    ///
+    /// let mut list = singly_linked_list![1, 5, 10];
+    /// let mut iter = list.iter_mut();
+    ///
+    /// iter.for_each(|val| *val *= 10);
+    ///
+    /// assert_eq!(list.len(), 3);
+    /// assert_eq!(list.pop(), Some(100));
+    /// assert_eq!(list.pop(), Some(50));
+    /// assert_eq!(list.pop(), Some(10));
+    /// ```
     pub fn iter_mut(&mut self) -> IterMut<T> {
         let raw_head = match self.head.as_mut() {
             Some(head) => RawLink::from(&mut **head),
@@ -626,7 +679,7 @@ impl<T> Drop for DoublyLinkedList<T> {
     }
 }
 
-/// Provides a shorthand macro for creating a double-ended list with multiple elements in it.
+/// Provides a shorthand macro for creating a Doubly Linked List with multiple elements in it.
 ///
 /// The first value contained within the `[]` being the tail and the last being the head.
 ///
@@ -670,6 +723,7 @@ macro_rules! doubly_linked_list {
 
 impl<T> Node<T> {
     /// Returns an initialised version of Node
+    #[inline]
     fn new(data: T) -> Self {
         Self {
             data,
@@ -678,11 +732,13 @@ impl<T> Node<T> {
         }
     }
 
+    #[inline]
     fn link(&mut self, mut next: Box<Self>) {
         next.prev = RawLink::from(self);
         self.next = Some(next);
     }
 
+    #[inline]
     fn take_next(&mut self) -> Option<Box<Self>> {
         let mut next = self.next.take();
         if let Some(node) = next.as_mut() {
