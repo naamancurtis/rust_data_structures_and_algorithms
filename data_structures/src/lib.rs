@@ -6,6 +6,7 @@
 //! - Singly Linked List
 //! - Deque
 //! - Doubly Linked List - _(Safe abstraction around unsafe code)_
+pub mod binary_search_tree;
 pub mod deque;
 pub mod doubly_linked_list;
 pub mod singly_linked_list;
