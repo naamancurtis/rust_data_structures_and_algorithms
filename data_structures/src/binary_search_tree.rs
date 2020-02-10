@@ -6,7 +6,7 @@ pub struct BinarySearchTree<'a, T> {
     length: usize,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default)]
 pub struct Node<T> {
     data: T,
     right: Edge<T>,
@@ -93,6 +93,38 @@ impl<'a, T> BinarySearchTree<'a, T> {
             }
         }
     }
+
+    pub fn contains(&self, target: T) -> bool {
+        if self.root.is_none() {
+            return false;
+        }
+
+        let mut node_to_compare_to = self.root.as_ref();
+
+        // Traverse the tree to find the appropriate place to insert it
+        while let Some(node) = node_to_compare_to {
+            match (self.cmp)(&target, &node.data) {
+                Ordering::Equal => return true,
+                Ordering::Greater => {
+                    match &node.right {
+                        Some(_) => {
+                            node_to_compare_to = node.right.as_ref();
+                        }
+                        None => return false,
+                    };
+                }
+                Ordering::Less => {
+                    match &node.left {
+                        Some(_) => {
+                            node_to_compare_to = node.left.as_ref();
+                        }
+                        None => return false,
+                    };
+                }
+            }
+        }
+        false
+    }
 }
 
 #[cfg(test)]
@@ -165,5 +197,33 @@ pub mod tests {
                 .borrow(),
             &7
         );
+    }
+
+    #[test]
+    fn correctly_contains() {
+        let mut bst = BinarySearchTree::default();
+        bst.insert(5);
+        bst.insert(1);
+        bst.insert(9);
+        bst.insert(2);
+        bst.insert(8);
+        bst.insert(3);
+        bst.insert(7);
+        bst.insert(4);
+        bst.insert(6);
+
+        assert!(bst.contains(1));
+        assert!(bst.contains(2));
+        assert!(bst.contains(3));
+        assert!(bst.contains(4));
+        assert!(bst.contains(5));
+        assert!(bst.contains(6));
+        assert!(bst.contains(7));
+        assert!(bst.contains(8));
+        assert!(bst.contains(9));
+        assert!(!bst.contains(10));
+        assert!(!bst.contains(-10));
+        assert!(!bst.contains(11));
+        assert!(!bst.contains(100000));
     }
 }
