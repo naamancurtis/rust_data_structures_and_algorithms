@@ -3,9 +3,13 @@
 A Cargo Workspace storing practice implementations of various data structures and algorithms in Rust. 
 
 ## [Data Structures](https://github.com/naamancurtis/rust_data_structures_and_algorithms/tree/master/data_structures/src)
-- Singly Linked List
-- Doubly Linked List
-- Deque
+#### Lists
+ - Singly Linked List
+ - Deque
+ - Doubly Linked List
+
+#### Trees
+ - Binary Search Tree
 
 ## [Problem Solving Patterns](https://github.com/naamancurtis/rust_data_structures_and_algorithms/tree/master/problem_solving_patterns/src)
 - Frequency Counter
