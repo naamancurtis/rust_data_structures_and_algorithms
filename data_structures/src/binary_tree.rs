@@ -23,12 +23,19 @@
 
 use crate::deque::Deque;
 
-/// # Binary Search Tree
+/// # Binary Tree
 ///
 /// This binary tree uses a random insertion algorithm (based on a coin toss) to create a tree, upon which
 /// different methods of traversal are offered. To offer a simplified public API and appropriately demonstrate
-/// the traversal schemes, the type of the tree `T` (`BinaryTree<T>`) requires `T` to
+/// the traversal schemes _(Without adding additional complexity)_, the type of the tree `T` (`BinaryTree<T>`) requires `T` to
 /// implement `PartialOrd`, `PartialEq` and `Copy`.
+///
+/// It offers 4 methods of tree traversal:
+/// - Breadth first search
+/// - Depth first search:
+///     - Pre-Order
+///     - In-Order
+///     - Post-Order
 ///
 /// # Examples
 ///
