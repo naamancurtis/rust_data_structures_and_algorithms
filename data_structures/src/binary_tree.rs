@@ -635,9 +635,6 @@ where
             if let Some(node) = &node.left {
                 traverse(node.as_ref(), target, data, result);
             }
-            if let Some(node) = &node.right {
-                traverse(node.as_ref(), target, data, result);
-            }
 
             match *target {
                 TraversalGoal::Target(target) if &node.data == target => {
@@ -667,6 +664,10 @@ where
 
             if result.0 {
                 return;
+            }
+
+            if let Some(node) = &node.right {
+                traverse(node.as_ref(), target, data, result);
             }
         };
 
