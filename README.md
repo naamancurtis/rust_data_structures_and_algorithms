@@ -9,6 +9,7 @@ A Cargo Workspace storing practice implementations of various data structures an
  - Doubly Linked List
 
 #### Trees
+ - Binary Tree
  - Binary Search Tree
 
 ## [Problem Solving Patterns](https://github.com/naamancurtis/rust_data_structures_and_algorithms/tree/master/problem_solving_patterns/src)
