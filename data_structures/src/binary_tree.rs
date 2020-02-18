@@ -77,6 +77,7 @@ struct Node<T> {
 }
 
 type Edge<T> = Option<Box<Node<T>>>;
+struct Success(bool);
 
 enum TraversalGoal<'a, T> {
     Target(&'a T),
@@ -329,8 +330,6 @@ where
             return (false, data);
         }
 
-        // Smart Pointer to a bool
-        struct Success(bool);
         let mut result = Success(false);
 
         fn traverse<T>(
@@ -343,7 +342,6 @@ where
         {
             match *target {
                 TraversalGoal::Target(target) if &node.data == target => {
-                    println!("Found Value");
                     result.0 = true;
                 }
                 TraversalGoal::VisitAll => {
@@ -369,16 +367,13 @@ where
             };
 
             if result.0 {
-                println!("Returning Result");
                 return;
             }
 
             if let Some(node) = &node.left {
-                println!("Recursively calling left");
                 traverse(node.as_ref(), target, data, result);
             }
             if let Some(node) = &node.right {
-                println!("Recursively calling right");
                 traverse(node.as_ref(), target, data, result);
             }
         };
@@ -467,6 +462,298 @@ where
     }
 
     // === /Depth First: Pre Order ===
+
+    // === Depth First: Post Order ===
+
+    // Private API
+    fn depth_first_search_post_order(&self, target: TraversalGoal<T>) -> (bool, Vec<T>) {
+        let mut data = match target {
+            TraversalGoal::VisitAll => Vec::with_capacity(self.len()),
+            _ => Vec::new(),
+        };
+
+        if self.root.is_none() {
+            return (false, data);
+        }
+
+        let mut result = Success(false);
+
+        fn traverse<T>(
+            node: &Node<T>,
+            target: &TraversalGoal<T>,
+            data: &mut Vec<T>,
+            result: &mut Success,
+        ) where
+            T: PartialOrd + PartialEq + Copy,
+        {
+            if let Some(node) = &node.left {
+                traverse(node.as_ref(), target, data, result);
+            }
+            if let Some(node) = &node.right {
+                traverse(node.as_ref(), target, data, result);
+            }
+
+            match *target {
+                TraversalGoal::Target(target) if &node.data == target => {
+                    result.0 = true;
+                }
+                TraversalGoal::VisitAll => {
+                    data.push(node.data);
+                }
+                TraversalGoal::Max => {
+                    if data.is_empty() {
+                        data.push(node.data);
+                    } else if data[0] < node.data {
+                        data.pop();
+                        data.push(node.data);
+                    }
+                }
+                TraversalGoal::Min => {
+                    if data.is_empty() {
+                        data.push(node.data);
+                    } else if data[0] > node.data {
+                        data.pop();
+                        data.push(node.data);
+                    }
+                }
+                _ => {}
+            };
+
+            if result.0 {
+                return;
+            }
+        };
+
+        traverse(
+            self.root.as_ref().expect("Already checked root is some"),
+            &target,
+            data.as_mut(),
+            &mut result,
+        );
+        (result.0, data)
+    }
+
+    /// Searches for the minimum value in the tree using a depth first post-order search algorithm
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::binary_tree;
+    ///
+    /// let mut bt = binary_tree![500, 10, 1000, 50, 600];
+    /// assert_eq!(bt.len(), 5);
+    ///
+    /// assert_eq!(bt.dfs_post_order_min_value(), Some(10));
+    /// ```
+    pub fn dfs_post_order_min_value(&self) -> Option<T> {
+        let (_, mut data) = self.depth_first_search_post_order(TraversalGoal::Min);
+        data.pop()
+    }
+
+    /// Searches for the maximum value in the tree using a depth first post-order search algorithm
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::binary_tree;
+    ///
+    /// let mut bt = binary_tree![500, 10, 1000, 50, 600];
+    /// assert_eq!(bt.len(), 5);
+    ///
+    /// assert_eq!(bt.dfs_post_order_max_value(), Some(1000));
+    /// ```
+    pub fn dfs_post_order_max_value(&self) -> Option<T> {
+        let (_, mut data) = self.depth_first_search_post_order(TraversalGoal::Max);
+        data.pop()
+    }
+
+    /// Returns all the values in a tree in a vec using the depth first post-order search algorithm
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::binary_tree;
+    ///
+    /// let mut bt = binary_tree![500, 10, 1000, 50, 600];
+    /// assert_eq!(bt.len(), 5);
+    ///
+    /// let mut result = bt.dfs_post_order_all();
+    /// result.sort();
+    ///
+    /// let expected = [10, 50, 500, 600, 1000];
+    ///
+    /// assert_eq!(result, expected);
+    /// ```
+    pub fn dfs_post_order_all(&self) -> Vec<T> {
+        let (_, data) = self.depth_first_search_post_order(TraversalGoal::VisitAll);
+        data
+    }
+
+    /// Returns all the values in a tree in a vec using the depth first post-order search algorithm
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::binary_tree;
+    ///
+    /// let mut bt = binary_tree![500, 10, 1000, 50, 600];
+    /// assert_eq!(bt.len(), 5);
+    ///
+    /// assert!(bt.dfs_post_order_contains(50));
+    /// assert!(!bt.dfs_post_order_contains(2));
+    /// ```
+    pub fn dfs_post_order_contains(&self, target: T) -> bool {
+        let (success, _) = self.depth_first_search_post_order(TraversalGoal::Target(&target));
+        success
+    }
+
+    // === /Depth First: Post Order ===
+
+    // === Depth First: In Order ===
+
+    // Private API
+    fn depth_first_search_in_order(&self, target: TraversalGoal<T>) -> (bool, Vec<T>) {
+        let mut data = match target {
+            TraversalGoal::VisitAll => Vec::with_capacity(self.len()),
+            _ => Vec::new(),
+        };
+
+        if self.root.is_none() {
+            return (false, data);
+        }
+
+        let mut result = Success(false);
+
+        fn traverse<T>(
+            node: &Node<T>,
+            target: &TraversalGoal<T>,
+            data: &mut Vec<T>,
+            result: &mut Success,
+        ) where
+            T: PartialOrd + PartialEq + Copy,
+        {
+            if let Some(node) = &node.left {
+                traverse(node.as_ref(), target, data, result);
+            }
+            if let Some(node) = &node.right {
+                traverse(node.as_ref(), target, data, result);
+            }
+
+            match *target {
+                TraversalGoal::Target(target) if &node.data == target => {
+                    result.0 = true;
+                }
+                TraversalGoal::VisitAll => {
+                    data.push(node.data);
+                }
+                TraversalGoal::Max => {
+                    if data.is_empty() {
+                        data.push(node.data);
+                    } else if data[0] < node.data {
+                        data.pop();
+                        data.push(node.data);
+                    }
+                }
+                TraversalGoal::Min => {
+                    if data.is_empty() {
+                        data.push(node.data);
+                    } else if data[0] > node.data {
+                        data.pop();
+                        data.push(node.data);
+                    }
+                }
+                _ => {}
+            };
+
+            if result.0 {
+                return;
+            }
+        };
+
+        traverse(
+            self.root.as_ref().expect("Already checked root is some"),
+            &target,
+            data.as_mut(),
+            &mut result,
+        );
+        (result.0, data)
+    }
+
+    /// Searches for the minimum value in the tree using a depth first post-order search algorithm
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::binary_tree;
+    ///
+    /// let mut bt = binary_tree![500, 10, 1000, 50, 600];
+    /// assert_eq!(bt.len(), 5);
+    ///
+    /// assert_eq!(bt.dfs_in_order_min_value(), Some(10));
+    /// ```
+    pub fn dfs_in_order_min_value(&self) -> Option<T> {
+        let (_, mut data) = self.depth_first_search_in_order(TraversalGoal::Min);
+        data.pop()
+    }
+
+    /// Searches for the maximum value in the tree using a depth first post-order search algorithm
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::binary_tree;
+    ///
+    /// let mut bt = binary_tree![500, 10, 1000, 50, 600];
+    /// assert_eq!(bt.len(), 5);
+    ///
+    /// assert_eq!(bt.dfs_in_order_max_value(), Some(1000));
+    /// ```
+    pub fn dfs_in_order_max_value(&self) -> Option<T> {
+        let (_, mut data) = self.depth_first_search_in_order(TraversalGoal::Max);
+        data.pop()
+    }
+
+    /// Returns all the values in a tree in a vec using the depth first post-order search algorithm
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::binary_tree;
+    ///
+    /// let mut bt = binary_tree![500, 10, 1000, 50, 600];
+    /// assert_eq!(bt.len(), 5);
+    ///
+    /// let mut result = bt.dfs_in_order_all();
+    /// result.sort();
+    ///
+    /// let expected = [10, 50, 500, 600, 1000];
+    ///
+    /// assert_eq!(result, expected);
+    /// ```
+    pub fn dfs_in_order_all(&self) -> Vec<T> {
+        let (_, data) = self.depth_first_search_in_order(TraversalGoal::VisitAll);
+        data
+    }
+
+    /// Returns all the values in a tree in a vec using the depth first post-order search algorithm
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::binary_tree;
+    ///
+    /// let mut bt = binary_tree![500, 10, 1000, 50, 600];
+    /// assert_eq!(bt.len(), 5);
+    ///
+    /// assert!(bt.dfs_in_order_contains(50));
+    /// assert!(!bt.dfs_in_order_contains(2));
+    /// ```
+    pub fn dfs_in_order_contains(&self, target: T) -> bool {
+        let (success, _) = self.depth_first_search_in_order(TraversalGoal::Target(&target));
+        success
+    }
+
+    // === /Depth First: Post Order ===
 }
 
 // Mimics a coin toss to decide where to insert the node

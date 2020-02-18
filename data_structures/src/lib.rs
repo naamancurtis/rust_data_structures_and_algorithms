@@ -8,7 +8,7 @@
 //! - Doubly Linked List - _(Safe abstraction around unsafe code)_
 //!
 //! # Trees
-//! - Binary Tree - Used to demonstrate traversal schemes_
+//! - Binary Tree - _Used to demonstrate traversal schemes_
 //! - Binary Search Tree
 pub mod binary_search_tree;
 pub mod binary_tree;
