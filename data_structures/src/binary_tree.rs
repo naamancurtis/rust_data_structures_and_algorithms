@@ -176,14 +176,22 @@ where
         }
 
         insert_rec(
-            self.root.as_mut().expect("Already checked this is some"),
+            self.root
+                .as_mut()
+                .expect("Already checked the root is some"),
             data,
         );
     }
 
-    // Private API for Breath First Search Traversal of the Tree
+    // === Breadth First ===
+
+    // Private API
     fn breadth_first_search(&self, target: TraversalGoal<T>) -> (bool, Vec<T>) {
-        let mut data = Vec::new();
+        let mut data = match target {
+            TraversalGoal::VisitAll => Vec::with_capacity(self.len()),
+            _ => Vec::new(),
+        };
+
         let mut result = false;
         if self.root.is_none() {
             return (result, data);
@@ -195,11 +203,9 @@ where
         while let Some(node) = queue.pop_front() {
             if let Some(node) = node {
                 match target {
-                    TraversalGoal::Target(target) => {
-                        if &node.data == target {
-                            result = true;
-                            return (result, data);
-                        }
+                    TraversalGoal::Target(target) if &node.data == target => {
+                        result = true;
+                        return (result, data);
                     }
                     TraversalGoal::VisitAll => {
                         data.push(node.data);
@@ -220,6 +226,7 @@ where
                             data.push(node.data);
                         }
                     }
+                    _ => {}
                 }
 
                 if node.left.is_some() {
@@ -277,12 +284,12 @@ where
     /// let mut bt = binary_tree![500, 10, 1000, 50, 600];
     /// assert_eq!(bt.len(), 5);
     ///
-    /// let result = bt.bfs_all();
+    /// let mut result = bt.bfs_all();
+    /// result.sort();
     ///
-    /// let expected = [500, 10, 1000, 50, 600];
+    /// let expected = [10, 50, 500, 600, 1000];
     ///
-    /// let matched = result.iter().zip(expected.iter()).filter(|&(a, b)| a == b).count();
-    /// assert_eq!(matched, 5);
+    /// assert_eq!(result, expected);
     /// ```
     pub fn bfs_all(&self) -> Vec<T> {
         let (_, data) = self.breadth_first_search(TraversalGoal::VisitAll);
@@ -306,6 +313,160 @@ where
         let (success, _) = self.breadth_first_search(TraversalGoal::Target(&target));
         success
     }
+
+    // === /Breadth First ===
+
+    // === Depth First: Pre Order ===
+
+    // Private API
+    fn depth_first_search_pre_order(&self, target: TraversalGoal<T>) -> (bool, Vec<T>) {
+        let mut data = match target {
+            TraversalGoal::VisitAll => Vec::with_capacity(self.len()),
+            _ => Vec::new(),
+        };
+
+        if self.root.is_none() {
+            return (false, data);
+        }
+
+        // Smart Pointer to a bool
+        struct Success(bool);
+        let mut result = Success(false);
+
+        fn traverse<T>(
+            node: &Node<T>,
+            target: &TraversalGoal<T>,
+            data: &mut Vec<T>,
+            result: &mut Success,
+        ) where
+            T: PartialOrd + PartialEq + Copy,
+        {
+            match *target {
+                TraversalGoal::Target(target) if &node.data == target => {
+                    println!("Found Value");
+                    result.0 = true;
+                }
+                TraversalGoal::VisitAll => {
+                    data.push(node.data);
+                }
+                TraversalGoal::Max => {
+                    if data.is_empty() {
+                        data.push(node.data);
+                    } else if data[0] < node.data {
+                        data.pop();
+                        data.push(node.data);
+                    }
+                }
+                TraversalGoal::Min => {
+                    if data.is_empty() {
+                        data.push(node.data);
+                    } else if data[0] > node.data {
+                        data.pop();
+                        data.push(node.data);
+                    }
+                }
+                _ => {}
+            };
+
+            if result.0 {
+                println!("Returning Result");
+                return;
+            }
+
+            if let Some(node) = &node.left {
+                println!("Recursively calling left");
+                traverse(node.as_ref(), target, data, result);
+            }
+            if let Some(node) = &node.right {
+                println!("Recursively calling right");
+                traverse(node.as_ref(), target, data, result);
+            }
+        };
+
+        traverse(
+            self.root.as_ref().expect("Already checked root is some"),
+            &target,
+            data.as_mut(),
+            &mut result,
+        );
+        (result.0, data)
+    }
+
+    /// Searches for the minimum value in the tree using a depth first pre-order search algorithm
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::binary_tree;
+    ///
+    /// let mut bt = binary_tree![500, 10, 1000, 50, 600];
+    /// assert_eq!(bt.len(), 5);
+    ///
+    /// assert_eq!(bt.dfs_pre_order_min_value(), Some(10));
+    /// ```
+    pub fn dfs_pre_order_min_value(&self) -> Option<T> {
+        let (_, mut data) = self.depth_first_search_pre_order(TraversalGoal::Min);
+        data.pop()
+    }
+
+    /// Searches for the maximum value in the tree using a depth first pre-order search algorithm
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::binary_tree;
+    ///
+    /// let mut bt = binary_tree![500, 10, 1000, 50, 600];
+    /// assert_eq!(bt.len(), 5);
+    ///
+    /// assert_eq!(bt.dfs_pre_order_max_value(), Some(1000));
+    /// ```
+    pub fn dfs_pre_order_max_value(&self) -> Option<T> {
+        let (_, mut data) = self.depth_first_search_pre_order(TraversalGoal::Max);
+        data.pop()
+    }
+
+    /// Returns all the values in a tree in a vec using the depth first pre-order search algorithm
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::binary_tree;
+    ///
+    /// let mut bt = binary_tree![500, 10, 1000, 50, 600];
+    /// assert_eq!(bt.len(), 5);
+    ///
+    /// let mut result = bt.dfs_pre_order_all();
+    /// result.sort();
+    ///
+    /// let expected = [10, 50, 500, 600, 1000];
+    ///
+    /// assert_eq!(result, expected);
+    /// ```
+    pub fn dfs_pre_order_all(&self) -> Vec<T> {
+        let (_, data) = self.depth_first_search_pre_order(TraversalGoal::VisitAll);
+        data
+    }
+
+    /// Returns all the values in a tree in a vec using the depth first pre-order search algorithm
+    ///
+    /// # Examples
+    /// ```rust
+    /// #[macro_use]
+    /// use data_structures::binary_tree;
+    ///
+    /// let mut bt = binary_tree![500, 10, 1000, 50, 600];
+    /// assert_eq!(bt.len(), 5);
+    ///
+    /// assert!(bt.dfs_pre_order_contains(50));
+    /// assert!(!bt.dfs_pre_order_contains(2));
+    /// ```
+    pub fn dfs_pre_order_contains(&self, target: T) -> bool {
+        let (success, _) = self.depth_first_search_pre_order(TraversalGoal::Target(&target));
+        success
+    }
+
+    // === /Depth First: Pre Order ===
 }
 
 // Mimics a coin toss to decide where to insert the node
@@ -319,7 +480,7 @@ fn insert_rec<T>(node: &mut Node<T>, data: T) {
         insert_rec(
             node.left
                 .as_mut()
-                .expect("We've already checked that it is some"),
+                .expect("We've already checked that left is some"),
             data,
         );
     } else {
@@ -331,7 +492,7 @@ fn insert_rec<T>(node: &mut Node<T>, data: T) {
         insert_rec(
             node.right
                 .as_mut()
-                .expect("We've already checked that it is some"),
+                .expect("We've already checked that right is some"),
             data,
         );
     }
