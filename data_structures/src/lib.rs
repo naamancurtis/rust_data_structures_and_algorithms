@@ -10,6 +10,10 @@
 //! # Trees
 //! - Binary Tree - _Used to demonstrate traversal schemes_
 //! - Binary Search Tree
+//!
+//! # Heaps
+//! - Binary Heap
+pub mod binary_heap;
 pub mod binary_search_tree;
 pub mod binary_tree;
 pub mod deque;
