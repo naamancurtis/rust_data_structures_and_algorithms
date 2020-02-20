@@ -1,62 +1,125 @@
-//! # Max Binary Heap
+//! # Unstable Binary Heap
 //!
-//! A simple heap allocated node based max binary heap which contains the following properties:
+//! A simple heap allocated node based binary heap which contains the following properties:
 //! 1. Each parent has at most two nodes
-//! 2. All child nodes must be smaller than their parent node
-//! 3. A binary heap is as compact as possible, with left children being filled first
+//! 2. A binary heap is as compact as possible, with left children being filled first
+//! 3. The type of the binary heap (min/max) will affect how nodes are inserted into it
 //!
 //! Given the properties of a Binary Heap, it's simple to model in a Vec<T>, therefore for
 //! simplicity this approach coupled with the optimisations made to Rust's Vec, this
 //! route has been taken.
 //!
+//! Note: This binary heap is **unstable**, insertion order is not maintained
+//!
 //! # Examples
 //!
-//! You can instantiate a binary heap using `new` or `default`
+//! You can instantiate a binary heap in 2 ways
+//! 1. If the type of the heap, `BinaryHeap<T>` satisfies the trait that `T: Ord`, and
+//! the default ordering implementation can be used, then a heap can be instantiated with [`new`]
+//! 2. If custom ordering logic is required, _for example, in the case of a priority queue_ then
+//! a custom comparator function can be provided to the heap using the [`with_custom_comparator_fn`]
+//! method
+//!
+//! The first argument to both methods of instantiating is the heap type, whether you want it to be
+//! a minimum or maximum heap
 //!
 //! ```rust
-//! use data_structures::binary_heap::BinaryHeap;
+//! use data_structures::binary_heap::{BinaryHeap, BinaryHeapType};
 //!
-//! let heap: BinaryHeap<i32> = BinaryHeap::new();
+//! let heap: BinaryHeap<i32> = BinaryHeap::new(BinaryHeapType::Min);
 //! assert_eq!(heap.len(), 0);
 //!
-//! let heap: BinaryHeap<i32> = BinaryHeap::default();
+//! struct SampleStruct {
+//!     data: i32,
+//!     priority: u32
+//! }
+//!
+//! let cmp = |a: &SampleStruct, b: &SampleStruct| a.priority.cmp(&b.priority);
+//!
+//! let heap: BinaryHeap<SampleStruct> = BinaryHeap::with_custom_comparator_fn(BinaryHeapType::Max, &cmp);
 //! assert!(heap.is_empty())
 //! ```
 
-#[derive(Default)]
-pub struct BinaryHeap<T>
-where
-    T: PartialEq + PartialOrd + Copy,
-{
+use std::cmp::Ordering;
+
+// Can't implement Deref for BinaryHeap, as we don't want to offer the full Vec API, as sorting
+// or iterating over the heap using Vec logic would break the structure
+
+pub struct BinaryHeap<'a, T> {
     heap: Vec<T>,
+    cmp: Box<&'a dyn Fn(&T, &T) -> Ordering>,
+    heap_type: BinaryHeapType,
+    comparator: Ordering,
 }
 
-impl<T> BinaryHeap<T>
-where
-    T: PartialEq + PartialOrd + Copy,
-{
-    /// Constructs a new, empty `BinaryHeap<T>` where `T` implements `PartialOrd + PartialEq + Copy`
+#[derive(Copy, Clone)]
+pub enum BinaryHeapType {
+    Max,
+    Min,
+}
+
+impl<'a, T> BinaryHeap<'a, T> {
+    /// Constructs a new, empty `BinaryHeap<T>`, in the example below it is a Max Binary Heap
     ///
     /// # Examples
     /// ```rust
-    /// use data_structures::binary_heap::BinaryHeap;
+    /// use data_structures::binary_heap::{BinaryHeap, BinaryHeapType};
     ///
-    /// let mut heap: BinaryHeap<i32> = BinaryHeap::new();
+    /// let mut heap: BinaryHeap<i32> = BinaryHeap::new(BinaryHeapType::Max);
     ///
     /// assert_eq!(heap.len(), 0);
     /// assert!(heap.is_empty());
     /// ```
-    pub fn new() -> Self {
-        Self { heap: Vec::new() }
+    pub fn new(heap_type: BinaryHeapType) -> Self
+    where
+        T: Ord,
+    {
+        Self {
+            heap: Vec::new(),
+            cmp: Box::new(&|a, b| a.cmp(b)),
+            heap_type,
+            comparator: match heap_type {
+                BinaryHeapType::Max => Ordering::Greater,
+                BinaryHeapType::Min => Ordering::Less,
+            },
+        }
+    }
+
+    /// Constructs a new, empty `BinaryHeap<T>`, with a custom comparator function,
+    /// this can be used to create a priority queue or other bespoke sorting logic
+    ///
+    /// # Examples
+    /// ```rust
+    /// use data_structures::binary_heap::{BinaryHeap, BinaryHeapType};
+    ///
+    /// let cmp = |a: &i32, b: &i32| a.cmp(b);
+    /// let mut heap: BinaryHeap<i32> = BinaryHeap::with_custom_comparator_fn(BinaryHeapType::Min, &cmp);
+    ///
+    /// assert_eq!(heap.len(), 0);
+    /// assert!(heap.is_empty());
+    /// ```
+    pub fn with_custom_comparator_fn<F: 'a>(heap_type: BinaryHeapType, cmp: &'a F) -> Self
+    where
+        F: Fn(&T, &T) -> Ordering,
+    {
+        Self {
+            heap: Vec::new(),
+            cmp: Box::new(cmp),
+            heap_type,
+            comparator: match heap_type {
+                BinaryHeapType::Max => Ordering::Greater,
+                BinaryHeapType::Min => Ordering::Less,
+            },
+        }
     }
 
     /// Returns the number of elements in the binary heap, also referred to as it's _length_
     ///
     /// # Examples
     /// ```rust
-    /// use data_structures::binary_heap::BinaryHeap;
+    /// use data_structures::binary_heap::{BinaryHeap, BinaryHeapType};
     ///
-    /// let mut heap = BinaryHeap::new();
+    /// let mut heap = BinaryHeap::new(BinaryHeapType::Max);
     ///
     /// assert_eq!(heap.len(), 0);
     ///
@@ -71,9 +134,9 @@ where
     ///
     /// # Examples
     /// ```rust
-    /// use data_structures::binary_heap::BinaryHeap;
+    /// use data_structures::binary_heap::{BinaryHeap, BinaryHeapType};
     ///
-    /// let mut heap = BinaryHeap::new();
+    /// let mut heap = BinaryHeap::new(BinaryHeapType::Max);
     ///
     /// assert!(heap.is_empty());
     ///
@@ -88,9 +151,9 @@ where
     ///
     /// # Examples
     /// ```rust
-    /// use data_structures::binary_heap::BinaryHeap;
+    /// use data_structures::binary_heap::{BinaryHeap, BinaryHeapType};
     ///
-    /// let mut heap = BinaryHeap::new();
+    /// let mut heap = BinaryHeap::new(BinaryHeapType::Max);
     ///
     /// assert_eq!(heap.depth(), 0);
     ///
@@ -111,14 +174,32 @@ where
         ((self.len() + 1) as f64).log2().ceil() as usize
     }
 
+    /// Returns a reference to the root node of the Heap
+    ///
+    /// # Examples
+    /// ```rust
+    /// use data_structures::binary_heap::{BinaryHeap, BinaryHeapType};
+    ///
+    /// let mut heap = BinaryHeap::new(BinaryHeapType::Max);
+    ///
+    /// heap.insert(10);
+    /// heap.insert(9);
+    /// heap.insert(8);
+    ///
+    /// assert_eq!(heap.get_root(), Some(&10))
+    /// ```
+    pub fn get_root(&self) -> Option<&T> {
+        self.heap.get(0)
+    }
+
     /// Returns an optional tuple containing the index of the child node and the value of the child
     /// node at the specified parent index
     ///
     /// # Examples
     /// ```rust
-    /// use data_structures::binary_heap::BinaryHeap;
+    /// use data_structures::binary_heap::{BinaryHeap, BinaryHeapType};
     ///
-    /// let mut heap = BinaryHeap::new();
+    /// let mut heap = BinaryHeap::new(BinaryHeapType::Max);
     ///
     /// heap.insert(10);
     /// heap.insert(9);
@@ -150,9 +231,9 @@ where
     ///
     /// # Examples
     /// ```rust
-    /// use data_structures::binary_heap::BinaryHeap;
+    /// use data_structures::binary_heap::{BinaryHeap, BinaryHeapType};
     ///
-    /// let mut heap = BinaryHeap::new();
+    /// let mut heap = BinaryHeap::new(BinaryHeapType::Max);
     ///
     /// heap.insert(10);
     /// heap.insert(9);
@@ -185,9 +266,9 @@ where
     ///
     /// # Examples
     /// ```rust
-    /// use data_structures::binary_heap::BinaryHeap;
+    /// use data_structures::binary_heap::{BinaryHeap, BinaryHeapType};
     ///
-    /// let mut heap = BinaryHeap::new();
+    /// let mut heap = BinaryHeap::new(BinaryHeapType::Max);
     ///
     /// heap.insert(10);
     /// heap.insert(9);
@@ -208,12 +289,63 @@ where
         let mut inserted_index = self.len() - 1;
 
         while let Some((parent_index, parent_val)) = self.get_parent(inserted_index) {
-            if &data > parent_val {
+            if (self.cmp)(&self.heap[inserted_index], parent_val) == self.comparator {
                 self.heap.swap(inserted_index, parent_index);
                 inserted_index = parent_index;
             } else {
                 break;
             }
         }
+    }
+
+    /// Returns a reference to the node at the provided index
+    ///
+    /// # Examples
+    /// ```rust
+    /// use data_structures::binary_heap::{BinaryHeap, BinaryHeapType};
+    ///
+    /// let mut heap = BinaryHeap::new(BinaryHeapType::Max);
+    ///
+    /// heap.insert(10);
+    /// heap.insert(9);
+    /// heap.insert(8);
+    /// heap.insert(7);
+    /// heap.insert(6);
+    ///
+    /// assert_eq!(heap.depth(), 3);
+    ///
+    /// assert_eq!(heap.get(1), Some(&9));
+    /// assert_eq!(heap.get(3), Some(&7));
+    /// assert_eq!(heap.get(6), None);
+    /// ```
+    pub fn get(&mut self, index: usize) -> Option<&T> {
+        self.heap.get(index)
+    }
+
+    /// Returns a mutable reference to the node at the provided index
+    ///
+    /// # Examples
+    /// ```rust
+    /// use data_structures::binary_heap::{BinaryHeap, BinaryHeapType};
+    ///
+    /// let mut heap = BinaryHeap::new(BinaryHeapType::Max);
+    ///
+    /// heap.insert(10);
+    /// heap.insert(9);
+    /// heap.insert(8);
+    /// heap.insert(7);
+    /// heap.insert(6);
+    ///
+    /// assert_eq!(heap.depth(), 3);
+    ///
+    /// assert_eq!(heap.get_mut(1), Some(&mut 9));
+    /// assert_eq!(heap.get_mut(3), Some(&mut 7));
+    /// assert_eq!(heap.get_mut(6), None);
+    ///
+    /// *heap.get_mut(1).unwrap() = 50;
+    /// assert_eq!(heap.get(1), Some(&50));
+    /// ```
+    pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
+        self.heap.get_mut(index)
     }
 }
