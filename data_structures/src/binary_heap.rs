@@ -192,8 +192,8 @@ impl<'a, T> BinaryHeap<'a, T> {
         self.heap.get(0)
     }
 
-    /// Returns an optional tuple containing the index of the child node and the value of the child
-    /// node at the specified parent index
+    /// Returns an optional tuple containing the index of the child node and a reference to
+    /// the value of the child node at the specified parent index
     ///
     /// # Examples
     /// ```rust
@@ -318,7 +318,7 @@ impl<'a, T> BinaryHeap<'a, T> {
     /// assert_eq!(heap.get(3), Some(&7));
     /// assert_eq!(heap.get(6), None);
     /// ```
-    pub fn get(&mut self, index: usize) -> Option<&T> {
+    pub fn get(&self, index: usize) -> Option<&T> {
         self.heap.get(index)
     }
 
@@ -396,6 +396,105 @@ impl<'a, T> BinaryHeap<'a, T> {
         };
         data.into_iter().rev().for_each(|node| self.insert(node));
     }
+
+    /// Extracts the root value from the heap and returns it
+    ///
+    /// # Examples
+    /// ```rust
+    /// use data_structures::binary_heap::{BinaryHeap, BinaryHeapType};
+    ///
+    /// let mut heap = BinaryHeap::new(BinaryHeapType::Max);
+    ///
+    /// heap.insert(10);
+    /// heap.insert(9);
+    /// heap.insert(8);
+    /// heap.insert(7);
+    /// heap.insert(6);
+    ///
+    /// assert_eq!(heap.depth(), 3);
+    ///
+    /// assert_eq!(heap.extract_root(), Some(10));
+    /// assert_eq!(heap.get_root(), Some(&9));
+    /// ```
+    pub fn extract_root(&mut self) -> Option<T> {
+        if self.len() == 1 {
+            return self.heap.pop();
+        }
+        let heap_length = self.len();
+        self.heap.swap(0, heap_length - 1);
+        let root = self.heap.pop();
+
+        // Bubble the (probably) incorrect back down the tree
+        let mut index = 0;
+
+        // The logic within this loop is somewhat messy, however due to the borrow checker and
+        // requirement to get a non-mutable reference to child nodes (has to be non-mutable as
+        // there are potentially 2 childs, which would break the only 1 immutable reference rule)
+        // and then requiring a mutable reference to the heap in order to perform swaps. This
+        // verbose way of performing the comparison allows the desired logic to occur without
+        // having to use unsafe
+        loop {
+            let mut did_swap = false;
+            let children = self.get_children(index);
+
+            match children {
+                (Some(left), Some(right)) => {
+                    let mut value_to_swap = right.1;
+                    let mut index_to_swap = right.0;
+                    if (self.cmp)(left.1, right.1) == self.comparator
+                        || (self.cmp)(left.1, right.1) == Ordering::Equal
+                    {
+                        value_to_swap = left.1;
+                        index_to_swap = left.0;
+                    }
+
+                    if (self.cmp)(
+                        value_to_swap,
+                        self.get(index)
+                            .expect("This should always be within the bound of the vec"),
+                    ) == self.comparator
+                    {
+                        self.heap.swap(index, index_to_swap);
+                        index = index_to_swap;
+                        did_swap = true;
+                    }
+                }
+                (Some(left), None) => {
+                    let index_to_swap = left.0;
+                    if (self.cmp)(
+                        left.1,
+                        self.get(index)
+                            .expect("This should always be within the bound of the vec"),
+                    ) == self.comparator
+                    {
+                        self.heap.swap(index, index_to_swap);
+                        index = index_to_swap;
+                        did_swap = true;
+                    }
+                }
+                (None, Some(right)) => {
+                    let index_to_swap = right.0;
+                    if (self.cmp)(
+                        right.1,
+                        self.get(index)
+                            .expect("This should always be within the bound of the vec"),
+                    ) == self.comparator
+                    {
+                        self.heap.swap(index, index_to_swap);
+                        index = index_to_swap;
+                        did_swap = true;
+                    }
+                }
+                (None, None) => {}
+            }
+
+            if !did_swap {
+                break;
+            }
+        }
+
+        root
+    }
 }
 
 #[cfg(test)]
@@ -403,7 +502,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn check_min_insert_works() {
+    fn min_insert() {
         let mut heap = BinaryHeap::new(BinaryHeapType::Min);
 
         heap.insert(10);
@@ -425,5 +524,21 @@ mod tests {
         assert_eq!(heap.get_parent(1), Some((0, &6)));
         assert_eq!(heap.get_children(0), (Some((1, &7)), Some((2, &9))));
         assert_eq!(heap.get_children(2), (Some((5, &15)), None));
+    }
+
+    #[test]
+    fn min_extract_root() {
+        let mut heap = BinaryHeap::new(BinaryHeapType::Min);
+
+        heap.insert(10);
+        heap.insert(9);
+        heap.insert(8);
+        heap.insert(7);
+        heap.insert(6);
+
+        assert_eq!(heap.depth(), 3);
+
+        assert_eq!(heap.extract_root(), Some(6));
+        assert_eq!(heap.get_root(), Some(&7));
     }
 }
