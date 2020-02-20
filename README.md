@@ -43,6 +43,10 @@ cargo doc
 cargo doc --open
 ```
 
+### Tests
+Tests can be run throughout the entire workspace by running `cargo test` at the root project level. Alternatively tests
+can be run on each library by navigating to the library root and running the same command.
+
 ### Resources used
 - [JS Algorithms & Data Structures Masterclass - _Colt Steele_](https://www.udemy.com/course/js-algorithms-and-data-structures-masterclass/)
 - [Learning Rust with entirely too many Linked Lists](https://cglab.ca/~abeinges/blah/too-many-lists/book/README.html)
