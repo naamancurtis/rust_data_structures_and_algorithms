@@ -52,7 +52,7 @@ pub struct BinaryHeap<'a, T> {
     comparator: Ordering,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum BinaryHeapType {
     Max,
     Min,
@@ -347,5 +347,83 @@ impl<'a, T> BinaryHeap<'a, T> {
     /// ```
     pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
         self.heap.get_mut(index)
+    }
+
+    /// Changes the heap type to the provided value. If the same heap type is provided, then the
+    /// function just returns. If the alternate heap type is provided then a new Binary Heap is
+    /// created and the data is inserted into it from scratch.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use data_structures::binary_heap::{BinaryHeap, BinaryHeapType};
+    ///
+    /// let mut heap = BinaryHeap::new(BinaryHeapType::Max);
+    ///
+    /// heap.insert(10);
+    /// heap.insert(9);
+    /// heap.insert(8);
+    /// heap.insert(7);
+    /// heap.insert(6);
+    /// heap.insert(15);
+    ///
+    /// assert_eq!(heap.depth(), 3);
+    ///
+    /// assert_eq!(heap.get_parent(1), Some((0, &15)));
+    /// assert_eq!(heap.get_children(0), (Some((1, &9)), Some((2, &10))));
+    /// assert_eq!(heap.get_children(2), (Some((5, &8)), None));
+    ///
+    /// heap.set_heap_type(BinaryHeapType::Min);
+    /// assert_eq!(heap.depth(), 3);
+    /// assert_eq!(heap.get_root(), Some(&6));
+    /// assert_eq!(heap.get_children(0), (Some((1, &8)), Some((2, &7))));
+    /// ```
+    pub fn set_heap_type(&mut self, heap_type: BinaryHeapType) {
+        if heap_type == self.heap_type {
+            return;
+        }
+
+        let data = std::mem::replace(&mut self.heap, Vec::new());
+        let cmp = std::mem::replace(&mut self.cmp, Box::new(&|_, _| Ordering::Greater));
+
+        *self = Self {
+            heap: Vec::new(),
+            cmp,
+            heap_type,
+            comparator: match heap_type {
+                BinaryHeapType::Max => Ordering::Greater,
+                BinaryHeapType::Min => Ordering::Less,
+            },
+        };
+        data.into_iter().rev().for_each(|node| self.insert(node));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn check_min_insert_works() {
+        let mut heap = BinaryHeap::new(BinaryHeapType::Min);
+
+        heap.insert(10);
+        heap.insert(9);
+        heap.insert(8);
+
+        assert_eq!(heap.get_root(), Some(&8));
+        assert_eq!(heap.get_children(0), (Some((1, &10)), Some((2, &9))));
+        assert_eq!(heap.depth(), 2);
+
+        heap.insert(7);
+        heap.insert(6);
+        heap.insert(15);
+
+        assert_eq!(heap.depth(), 3);
+
+        assert_eq!(heap.get_root(), Some(&6));
+
+        assert_eq!(heap.get_parent(1), Some((0, &6)));
+        assert_eq!(heap.get_children(0), (Some((1, &7)), Some((2, &9))));
+        assert_eq!(heap.get_children(2), (Some((5, &15)), None));
     }
 }
