@@ -12,6 +12,9 @@ A Cargo Workspace storing practice implementations of various data structures an
  - Binary Tree
  - Binary Search Tree
 
+##### Heaps
+ - Binary Heap - _Contains_ **Priority Queue** _API_
+
 ## [Problem Solving Patterns](https://github.com/naamancurtis/rust_data_structures_and_algorithms/tree/master/problem_solving_patterns/src)
 - Frequency Counter
 - Multiple Pointers

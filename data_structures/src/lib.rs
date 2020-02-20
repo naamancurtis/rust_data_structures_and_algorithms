@@ -11,8 +11,8 @@
 //! - Binary Tree - _Used to demonstrate traversal schemes_
 //! - Binary Search Tree
 //!
-//! # Heaps
-//! - Binary Heap
+//! ### Heaps
+//! - Binary Heap - _Also exposes API for Priority Queue_
 pub mod binary_heap;
 pub mod binary_search_tree;
 pub mod binary_tree;

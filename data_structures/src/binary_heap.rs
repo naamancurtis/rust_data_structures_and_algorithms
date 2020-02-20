@@ -5,30 +5,32 @@
 //! 2. A binary heap is as compact as possible, with left children being filled first
 //! 3. The type of the binary heap (min/max) will affect how nodes are inserted into it
 //!
-//! Given the properties of a Binary Heap, it's simple to model in a Vec<T>, therefore for
-//! simplicity this approach coupled with the optimisations made to Rust's Vec, this
-//! route has been taken.
+//! This implementation uses an underlying `Vec<T>` to store the `BinaryHeap<T>` so limitations & performance
+//! are based off Rust's `Vec`.
 //!
 //! Note: This binary heap is **unstable**, insertion order is not maintained
 //!
 //! # Examples
 //!
 //! You can instantiate a binary heap in 2 ways
-//! 1. If the type of the heap, `BinaryHeap<T>` satisfies the trait that `T: Ord`, and
-//! the default ordering implementation can be used, then a heap can be instantiated with [`new`]
-//! 2. If custom ordering logic is required, _for example, in the case of a priority queue_ then
-//! a custom comparator function can be provided to the heap using the [`with_custom_comparator_fn`]
-//! method
+//! 1. If the type of the heap, `BinaryHeap<T>` satisfies the trait that `T: Ord` and
+//! the `Ord` implementation is suitable for your use case, then a heap can be instantiated with [`new`]
+//! 2. If custom ordering logic is required, _for example, in the case of a **Priority Queue**_ then
+//! a custom comparator function can be provided to the heap when instantiating it
+//! using the [`with_custom_comparator_fn`] method
 //!
-//! The first argument to both methods of instantiating is the heap type, whether you want it to be
+//! The first argument to both methods of instantiating is the heap type, ie. whether you want it to be
 //! a minimum or maximum heap
 //!
 //! ```rust
 //! use data_structures::binary_heap::{BinaryHeap, BinaryHeapType};
 //!
+//! // Instantiating using new
 //! let heap: BinaryHeap<i32> = BinaryHeap::new(BinaryHeapType::Min);
 //! assert_eq!(heap.len(), 0);
 //!
+//!
+//! // Providing a custom comparator function
 //! struct SampleStruct {
 //!     data: i32,
 //!     priority: u32
@@ -36,15 +38,145 @@
 //!
 //! let cmp = |a: &SampleStruct, b: &SampleStruct| a.priority.cmp(&b.priority);
 //!
-//! let heap: BinaryHeap<SampleStruct> = BinaryHeap::with_custom_comparator_fn(BinaryHeapType::Max, &cmp);
+//! let heap: BinaryHeap<SampleStruct> =
+//!     BinaryHeap::with_custom_comparator_fn(BinaryHeapType::Max, &cmp);
 //! assert!(heap.is_empty())
 //! ```
+//!
+//! ## Use as a Priority Queue
+//!
+//! The API of the Binary Heap is extended to allow you to create a fully functional priority queue
+//! from it. In order to do so you need to provide a custom comparator function which specifies how
+//! the data in the heap should be sorted, as well as if it should be sorted by min or max (depending
+//! on what your comparator function returns)
+//!
+//! ```rust
+//! use data_structures::binary_heap::{BinaryHeap, BinaryHeapType};
+//! struct PriorityStruct {
+//!     data: String,
+//!     priority: u32
+//! }
+//!
+//! // The custom function must return an Ordering
+//! let cmp = |a: &PriorityStruct, b: &PriorityStruct| a.priority.cmp(&b.priority);
+//!
+//! // For our example use case, the lower the value of the priority, the more important it is
+//! let mut heap = BinaryHeap::with_custom_comparator_fn(BinaryHeapType::Min, &cmp);
+//!
+//! let data_1 = PriorityStruct {
+//!     data: String::from("Task 1"),
+//!     priority: 10,
+//! };
+//!
+//! let data_2 = PriorityStruct {
+//!     data: String::from("Task 2"),
+//!     priority: 5,
+//! };
+//!
+//! let data_3 = PriorityStruct {
+//!     data: String::from("Task 3"),
+//!     priority: 1,
+//! };
+//!
+//! heap.insert(data_1);
+//! heap.insert(data_2);
+//! heap.insert(data_3);
+//!
+//! assert_eq!(heap.get_root().unwrap().priority, 1);
+//! assert_eq!(heap.get_root().unwrap().data, String::from("Task 3"));
+//! ```
+//!
+//! [`new`]: ./struct.BinaryHeap.html#method.new
+//! [`with_custom_comparator_fn`]: ./struct.BinaryHeap.html#method.with_custom_comparator_fn
 
 use std::cmp::Ordering;
 
 // Can't implement Deref for BinaryHeap, as we don't want to offer the full Vec API, as sorting
 // or iterating over the heap using Vec logic would break the structure
 
+/// # Binary Heap
+///
+/// A simple heap allocated node based binary heap which contains the following properties:
+/// 1. Each parent has at most two nodes
+/// 2. A binary heap is as compact as possible, with left children being filled first
+/// 3. The type of the binary heap (min/max) will affect how nodes are inserted into it
+/// # Examples
+/// ```rust
+/// use data_structures::binary_heap::{BinaryHeap, BinaryHeapType};
+///
+/// let mut heap = BinaryHeap::new(BinaryHeapType::Min);
+/// assert!(heap.is_empty());
+///
+/// heap.insert(10);
+/// heap.insert(9);
+/// heap.insert(8);
+/// heap.insert(7);
+/// heap.insert(6);
+///
+/// // As it is a Minimum Binary Heap, the root should be the lowest value
+/// assert_eq!(heap.get_root(), Some(&6));
+/// assert_eq!(heap.get_children(0), (Some((1, &7)), Some((2, &9))));
+///
+/// // Check the depth and the length
+/// assert_eq!(heap.depth(), 3);
+/// assert_eq!(heap.len(), 5);
+///
+/// // Extract the root
+/// assert_eq!(heap.extract_root(), Some(6));
+/// assert_eq!(heap.get_root(), Some(&7));
+///
+/// assert_eq!(heap.depth(), 3);
+/// assert_eq!(heap.len(), 4);
+///
+/// assert_eq!(heap.extract_root(), Some(7));
+/// assert_eq!(heap.get_root(), Some(&8));
+///
+/// assert_eq!(heap.depth(), 2);
+/// assert_eq!(heap.len(), 3);
+/// ```
+///
+/// ## Use as a Priority Queue
+///
+/// The API of the Binary Heap is extended to allow you to create a fully functional priority queue
+/// from it. In order to do so you need to provide a custom comparator function which specifies how
+/// the data in the heap should be sorted, as well as if it should be sorted by min or max (depending
+/// on what your comparator function returns)
+///
+/// ```rust
+/// use data_structures::binary_heap::{BinaryHeap, BinaryHeapType};
+/// struct PriorityStruct {
+///     data: String,
+///     priority: u32
+/// }
+///
+/// // The custom function must return an Ordering
+/// let cmp = |a: &PriorityStruct, b: &PriorityStruct| a.priority.cmp(&b.priority);
+///
+/// // For our example use case, the lower the value of the priority, the more important it is
+/// let mut heap = BinaryHeap::with_custom_comparator_fn(BinaryHeapType::Min, &cmp);
+///
+/// let data_1 = PriorityStruct {
+///     data: String::from("Task 1"),
+///     priority: 10,
+/// };
+///
+/// let data_2 = PriorityStruct {
+///     data: String::from("Task 2"),
+///     priority: 5,
+/// };
+///
+/// let data_3 = PriorityStruct {
+///     data: String::from("Task 3"),
+///     priority: 1,
+/// };
+///
+/// heap.insert(data_1);
+/// heap.insert(data_2);
+/// heap.insert(data_3);
+///
+/// assert_eq!(heap.get_root().unwrap().priority, 1);
+/// assert_eq!(heap.get_root().unwrap().data, String::from("Task 3"));
+/// ```
 pub struct BinaryHeap<'a, T> {
     heap: Vec<T>,
     cmp: Box<&'a dyn Fn(&T, &T) -> Ordering>,
@@ -52,6 +184,7 @@ pub struct BinaryHeap<'a, T> {
     comparator: Ordering,
 }
 
+/// Specifies whether the Heap Type should be a Maximum Binary Heap, or Minimum Binary Heap
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum BinaryHeapType {
     Max,
@@ -429,7 +562,7 @@ impl<'a, T> BinaryHeap<'a, T> {
 
         // The logic within this loop is somewhat messy, however due to the borrow checker and
         // requirement to get a non-mutable reference to child nodes (has to be non-mutable as
-        // there are potentially 2 childs, which would break the only 1 immutable reference rule)
+        // there are potentially 2 children, which would break the only 1 immutable reference rule)
         // and then requiring a mutable reference to the heap in order to perform swaps. This
         // verbose way of performing the comparison allows the desired logic to occur without
         // having to use unsafe
@@ -472,6 +605,7 @@ impl<'a, T> BinaryHeap<'a, T> {
                         did_swap = true;
                     }
                 }
+                // It would be incorrect for this case to actually occur given our insert logic
                 (None, Some(right)) => {
                     let index_to_swap = right.0;
                     if (self.cmp)(
