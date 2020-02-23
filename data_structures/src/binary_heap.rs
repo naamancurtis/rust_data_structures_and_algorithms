@@ -347,6 +347,7 @@ impl<'a, T> BinaryHeap<'a, T> {
     /// assert_eq!(heap.get_children(2), (None, None));
     /// assert_eq!(heap.get_children(6), (None, None));
     /// ```
+    #[allow(clippy::type_complexity)]
     pub fn get_children(&self, index: usize) -> (Option<(usize, &T)>, Option<(usize, &T)>) {
         let temp_index = 2 * index;
         let left = match self.heap.get(temp_index + 1) {
@@ -573,13 +574,15 @@ impl<'a, T> BinaryHeap<'a, T> {
             match children {
                 (Some(left), Some(right)) => {
                     let mut value_to_swap = right.1;
-                    let mut index_to_swap = right.0;
-                    if (self.cmp)(left.1, right.1) == self.comparator
+
+                    let index_to_swap = if (self.cmp)(left.1, right.1) == self.comparator
                         || (self.cmp)(left.1, right.1) == Ordering::Equal
                     {
                         value_to_swap = left.1;
-                        index_to_swap = left.0;
-                    }
+                        left.0
+                    } else {
+                        right.0
+                    };
 
                     if (self.cmp)(
                         value_to_swap,

@@ -83,7 +83,7 @@ where
 
     pub fn has(&self, key: K) -> bool {
         let hash = self.hash(&key);
-        self.base[hash].iter().find(|(k, _)| *k == key).is_some()
+        self.base[hash].iter().any(|(k, _)| *k == key)
     }
 
     pub fn keys(&self) -> Vec<&K> {
@@ -127,7 +127,6 @@ impl CustomHash for String {
         let weird_prime = 31;
 
         self.chars()
-            .into_iter()
             .take(self.len().min(50)) // An upper bound for a "constant time" hash
             .for_each(|c| {
                 let mut c_code = c as u8;
