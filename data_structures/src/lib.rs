@@ -7,11 +7,14 @@
 //! - Deque
 //! - Doubly Linked List - _(Safe abstraction around unsafe code)_
 //!
-//! ## Trees
+//! ## Graphs
+//! - Undirected Graph
+//!
+//! ### Trees
 //! - Binary Tree - _Used to demonstrate traversal schemes_
 //! - Binary Search Tree
 //!
-//! ### Heaps
+//! #### Heaps
 //! - Binary Heap - _Also exposes API for Priority Queue_
 //!
 //! # Hash Tables
@@ -21,5 +24,7 @@ pub mod binary_search_tree;
 pub mod binary_tree;
 pub mod deque;
 pub mod doubly_linked_list;
+// Not usable, so not publicly exported
+pub mod graph;
 mod hash_table;
 pub mod singly_linked_list;

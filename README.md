@@ -7,31 +7,34 @@ A Cargo Workspace storing practice implementations of various data structures an
  - Singly Linked List
  - Deque
  - Doubly Linked List
+ 
+#### Graph
+ - Undirected Graph
 
-#### Trees
+##### Trees
  - Binary Tree
  - Binary Search Tree
 
-##### Heaps
+###### Heaps
  - Binary Heap - _Contains_ **Priority Queue** _API_
 
 ## [Problem Solving Patterns](https://github.com/naamancurtis/rust_data_structures_and_algorithms/tree/master/problem_solving_patterns/src)
-- Frequency Counter
-- Multiple Pointers
-- Recursion
-- Sliding Window
+ - Frequency Counter
+ - Multiple Pointers
+ - Recursion
+ - Sliding Window
 
 ## [Searching Algorithms](https://github.com/naamancurtis/rust_data_structures_and_algorithms/tree/master/searching/src)
-- Linear Search
-- Binary Search
+ - Linear Search
+ - Binary Search
 
 ## [Sorting Algorithms](https://github.com/naamancurtis/rust_data_structures_and_algorithms/tree/master/sorting/src)
-- Bubble Sort
-- Insertion Sort
-- Selection Sort
-- Radix Sort
-- Merge Sort
-- Quick Sort
+ - Bubble Sort
+ - Insertion Sort
+ - Selection Sort
+ - Radix Sort
+ - Merge Sort
+ - Quick Sort
 
 ## [Sample Problems](https://github.com/naamancurtis/rust_data_structures_and_algorithms/tree/master/sample_problems/src)
 - Find availability in two calendars
