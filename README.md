@@ -8,7 +8,7 @@ A Cargo Workspace storing practice implementations of various data structures an
  - Deque
  - Doubly Linked List
  
-#### Graph
+#### Graphs
  - Undirected Graph
 
 ##### Trees
@@ -40,12 +40,13 @@ A Cargo Workspace storing practice implementations of various data structures an
 - Find availability in two calendars
 
 ## Workspace Documentation
-Most libraries are documented inline with `rustdoc`, to build the docs use [Cargo](https://doc.rust-lang.org/cargo/index.html) 
-can be used to build the docs, to do so navigate to the project root and run:
+Most libraries are documented inline with `rustdoc`, to build the docs use [Cargo](https://doc.rust-lang.org/cargo/index.html). 
+TL;DR: Navigate to the project root and run:
 
  ```shell script
 # to build the docs:
 cargo doc 
+# By default they'll be found somewhere like `./target/doc/{crate_name}/index.html`
 
 # if you want them to open in the browser after building
 cargo doc --open
