@@ -22,19 +22,17 @@
 //! ### Time
 //! - Creating ref array - **O**(s) - *where s is the total number of slots that a meeting could fit in between the bounds*
 //! - Looping over the calendars to fill the HashSet - **O**(c1 + c2)
-//! - Looping over the ref array to find the available slots - **O**(s)
-//! - Mapping strings to ints in unreduced array - **O**(u) - *where u is the length of the un-reduced array*
-//! - Loop over unreduced array once to fill the reduced array - **O**(u)
+//! - Looping over timeslots array to fill the results array - **O**(s)
+//!     - Although this is a nested `loop{for...{}}` structure, exactly `s` loops will be run
 //!
-//! **Total:** **O**(2s + c1 + c2 + 2u) which simplifies to **O**(n)
+//! **Total:** **O**(2s + c1 + c2) which simplifies to **O**(n) - Linear Time
 //!
 //! ### Space
 //! - Ref Array - **O**(s) - *where s is the total number of slots that a meeting could fit in between the bounds*
 //! - HashSet - **O**(u') - *where u' is all of the unavailable time slots*
-//! - Unreduced availability array - **O**(u) - *where u is all of the available time slots*
-//! - Reduced availability - **O**(u) - *worst case would be that you can't reduce any elements, and it's the same length*
+//! - Results - **O**(n) - *where n is the total number of results*
 //!
-//! **Total:** **O**(2s + u) - *as `u + u' = s`*
+//! **Total:** **O**(n + s + u') - Linear Time
 
 use std::borrow::BorrowMut;
 use std::collections::HashSet;
@@ -53,65 +51,56 @@ pub fn find_availability(
     let end = string_to_int(bound_1.1).min(string_to_int(bound_2.1));
 
     let num_of_blocks = (end - start) / duration;
-    let mut ref_arr = Vec::new();
+    let mut timeslots = Vec::new();
     for n in 0..num_of_blocks {
-        ref_arr.push(start + (n * duration))
+        timeslots.push(start + (n * duration))
     }
 
-    let mut availability_map = HashSet::new();
+    let mut unavailable_timeslots = HashSet::new();
 
-    parse_calendar(calendar_1, availability_map.borrow_mut(), &ref_arr);
-    parse_calendar(calendar_2, availability_map.borrow_mut(), &ref_arr);
+    parse_calendar(calendar_1, unavailable_timeslots.borrow_mut(), &timeslots);
+    parse_calendar(calendar_2, unavailable_timeslots.borrow_mut(), &timeslots);
 
-    let mut unreduced_availability = Vec::new();
+    let mut availability = Vec::new();
 
-    ref_arr.into_iter().for_each(|time_slot| {
-        if !availability_map.contains(&time_slot) {
-            unreduced_availability.push(time_slot);
-        }
-    });
-
-    let unreduced_availability = unreduced_availability
-        .into_iter()
-        .map(|start| (start, start + 30))
-        .collect::<Vec<(i32, i32)>>();
-
-    let mut reduced_availability = Vec::with_capacity(unreduced_availability.len());
-    let mut ptr_left = 0;
-    let mut ptr_right = 1;
-
-    if unreduced_availability.is_empty() {
-        return Vec::new();
-    }
+    let mut left_ptr = 0;
+    let mut right_ptr;
 
     loop {
-        if ptr_right == unreduced_availability.len() && ptr_right - ptr_left == 1 {
-            reduced_availability.push(tuple_int_to_string(unreduced_availability[ptr_left]));
+        if unavailable_timeslots.contains(&timeslots[left_ptr]) {
+            left_ptr += 1;
+            // Edge case where there's no valid times
+            if left_ptr >= timeslots.len() {
+                break;
+            }
+            continue;
+        }
+
+        if left_ptr == timeslots.len() - 1 {
+            let start_time = timeslots[left_ptr];
+            availability.push(tuple_int_to_string((start_time, start_time + duration)));
             break;
         }
 
-        if unreduced_availability[ptr_left].1 == unreduced_availability[ptr_right].0 {
-            // Need to move ptr right up 1 to check the following thing
-            ptr_right += 1;
-        } else if ptr_right - ptr_left == 1 && ptr_right < unreduced_availability.len() {
-            reduced_availability.push(tuple_int_to_string(unreduced_availability[ptr_left]));
-            ptr_left += 1;
-            ptr_right += 1;
-        } else {
-            reduced_availability.push((
-                int_to_string(unreduced_availability[ptr_left].0),
-                int_to_string(unreduced_availability[ptr_right - 1].1),
-            ));
-            ptr_left = ptr_right;
-            ptr_right += 1;
+        right_ptr = left_ptr + 1;
+
+        for j in right_ptr..timeslots.len() {
+            if !unavailable_timeslots.contains(&timeslots[j]) {
+                right_ptr += 1;
+            } else {
+                break;
+            }
         }
 
-        if ptr_right > unreduced_availability.len() {
-            break;
-        }
+        availability.push((
+            int_to_string(timeslots[left_ptr]),
+            int_to_string(timeslots[right_ptr]),
+        ));
+
+        left_ptr = right_ptr;
     }
 
-    reduced_availability
+    availability
 }
 
 fn string_to_int(s: String) -> i32 {
