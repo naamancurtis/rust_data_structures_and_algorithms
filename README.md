@@ -33,8 +33,13 @@ A Cargo Workspace storing practice implementations of various data structures an
 - Merge Sort
 - Quick Sort
 
-### Docs
-Cargo can be used to build the docs, to do so navigate to the project root and run:
+## [Sample Problems](https://github.com/naamancurtis/rust_data_structures_and_algorithms/tree/master/sample_problems/src)
+- Find availability in two calendars
+
+## Workspace Documentation
+Most libraries are documented inline with `rustdoc`, to build the docs use [Cargo](https://doc.rust-lang.org/cargo/index.html) 
+can be used to build the docs, to do so navigate to the project root and run:
+
  ```shell script
 # to build the docs:
 cargo doc 
@@ -43,7 +48,7 @@ cargo doc
 cargo doc --open
 ```
 
-### Tests
+## Tests
 Tests can be run throughout the entire workspace by running `cargo test` at the root project level. Alternatively tests
 can be run on each library by navigating to the library root and running the same command.
 
