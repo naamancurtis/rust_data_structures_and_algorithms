@@ -34,7 +34,7 @@ where
     let mut pointer_2 = arr.len() - 1;
 
     let average_fn = |ptr_1: usize, ptr_2: usize| -> f64 {
-        (ToPrimitive::to_f64(&(arr[ptr_1] + arr[ptr_2])).unwrap() / 2f64)
+        ToPrimitive::to_f64(&(arr[ptr_1] + arr[ptr_2])).unwrap() / 2f64
     };
 
     let target_average = ToPrimitive::to_f64(&target_average).unwrap();

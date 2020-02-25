@@ -84,8 +84,8 @@ pub fn find_availability(
 
         right_ptr = left_ptr + 1;
 
-        for j in right_ptr..timeslots.len() {
-            if !unavailable_timeslots.contains(&timeslots[j]) {
+        for slot in timeslots.iter().skip(right_ptr) {
+            if !unavailable_timeslots.contains(slot) {
                 right_ptr += 1;
             } else {
                 break;

@@ -47,20 +47,19 @@ where
         let node = Node::new(node);
         let key = node.get_key();
 
-        self.adjacency_list.entry(key).or_insert(Vec::new());
+        self.adjacency_list.entry(key).or_insert_with(Vec::new);
         self.key_value_map.entry(key).or_insert(node);
     }
 
     pub fn add_edge(&mut self, node1: &'a T, node2: &'a T) {
         let key1 = get_key(node1);
         let key2 = get_key(node2);
-        match self.adjacency_list.get_mut(&key1) {
-            Some(connected_to) => connected_to.push(key2),
-            None => {}
+
+        if let Some(connected_to) = self.adjacency_list.get_mut(&key1) {
+            connected_to.push(key2);
         }
-        match self.adjacency_list.get_mut(&key2) {
-            Some(connected_to) => connected_to.push(key1),
-            None => {}
+        if let Some(connected_to) = self.adjacency_list.get_mut(&key2) {
+            connected_to.push(key1);
         }
     }
 
@@ -71,7 +70,7 @@ where
     pub fn get_relations(&self, node: &'a T) -> Option<Vec<&T>> {
         match self.adjacency_list.get(&get_key(node)) {
             Some(relations) => relations
-                .into_iter()
+                .iter()
                 .map(|key| self.key_value_map.get(key).map(|node| node.value))
                 .collect(),
             None => None,

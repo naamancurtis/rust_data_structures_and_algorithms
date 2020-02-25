@@ -782,7 +782,7 @@ impl<T> RawLink<T> {
 
     #[inline]
     fn take(&mut self) -> Self {
-        mem::replace(self, RawLink::default())
+        mem::take(self)
     }
 
     #[inline]
