@@ -8,29 +8,27 @@ where
     T: Eq + Hash,
 {
     adjacency_list: HashMap<u64, Vec<u64>>,
-    key_value_map: HashMap<u64, &'a Node<T>>,
+    key_value_map: HashMap<u64, Node<'a, T>>,
 }
 
-#[derive(Default, Hash, PartialEq, Eq)]
-pub struct Node<T>
+#[derive(Hash, PartialEq, Eq)]
+pub struct Node<'a, T>
 where
     T: Eq + Hash,
 {
-    value: T,
+    value: &'a T,
 }
 
-impl<T> Node<T>
+impl<'a, T> Node<'a, T>
 where
     T: Hash + Eq,
 {
-    pub fn new(node: T) -> Self {
+    pub fn new(node: &'a T) -> Self {
         Self { value: node }
     }
 
     pub fn get_key(&self) -> u64 {
-        let mut hasher = DefaultHasher::new();
-        self.hash(&mut hasher);
-        hasher.finish()
+        get_key(&self)
     }
 }
 
@@ -45,9 +43,64 @@ where
         }
     }
 
-    pub fn add_vertex(&mut self, node: &'a Node<T>) {
+    pub fn add_vertex(&mut self, node: &'a T) {
+        let node = Node::new(node);
         let key = node.get_key();
+
         self.adjacency_list.entry(key).or_insert(Vec::new());
         self.key_value_map.entry(key).or_insert(node);
     }
+
+    pub fn add_edge(&mut self, node1: &'a T, node2: &'a T) {
+        let key1 = get_key(node1);
+        let key2 = get_key(node2);
+        match self.adjacency_list.get_mut(&key1) {
+            Some(connected_to) => connected_to.push(key2),
+            None => {}
+        }
+        match self.adjacency_list.get_mut(&key2) {
+            Some(connected_to) => connected_to.push(key1),
+            None => {}
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        let mut graph = UndirectedGraph::default();
+
+        let str_1 = String::from("Key 1");
+        let str_2 = String::from("Key 2");
+        let str_3 = String::from("Key 3");
+
+        graph.add_vertex(&str_1);
+        graph.add_vertex(&str_2);
+        graph.add_vertex(&str_3);
+
+        graph.add_edge(&str_1, &str_2);
+        graph.add_edge(&str_1, &str_3);
+
+        let key_1 = get_key(&str_1);
+        let key_2 = get_key(&str_2);
+        let key_3 = get_key(&str_3);
+
+        assert!(graph.adjacency_list.contains_key(&key_1));
+        assert!(graph.adjacency_list.contains_key(&key_2));
+        assert!(graph.adjacency_list.contains_key(&key_3));
+
+        assert!(graph.adjacency_list.get(&key_1).unwrap().contains(&key_2));
+        assert!(graph.adjacency_list.get(&key_1).unwrap().contains(&key_3));
+        assert!(graph.adjacency_list.get(&key_2).unwrap().contains(&key_1));
+        assert!(graph.adjacency_list.get(&key_3).unwrap().contains(&key_1));
+    }
+}
+
+fn get_key<T>(node: &T) -> u64 where T: Eq + Hash {
+    let mut hasher = DefaultHasher::new();
+    node.hash(&mut hasher);
+    hasher.finish()
 }
