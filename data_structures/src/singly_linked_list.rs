@@ -4,7 +4,7 @@
 //!
 //! It has `O(1)` access, pushing and popping from the **head** element. Interacting with any
 //! value in the list other than the head will require inefficient iteration through the list
-//! to find the relevant value (no random access)  
+//! to find the relevant value (no random access)
 //!
 //! # Examples
 //! You can explicitly create a new list with [`new`]

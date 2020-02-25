@@ -63,6 +63,20 @@ where
             None => {}
         }
     }
+
+    pub fn has(&self, node: &'a T) -> bool {
+        self.adjacency_list.contains_key(&get_key(node))
+    }
+
+    pub fn get_relations(&self, node: &'a T) -> Option<Vec<&T>> {
+        match self.adjacency_list.get(&get_key(node)) {
+            Some(relations) => relations
+                .into_iter()
+                .map(|key| self.key_value_map.get(key).map(|node| node.value))
+                .collect(),
+            None => None,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -99,7 +113,10 @@ mod tests {
     }
 }
 
-fn get_key<T>(node: &T) -> u64 where T: Eq + Hash {
+fn get_key<T>(node: &T) -> u64
+where
+    T: Eq + Hash,
+{
     let mut hasher = DefaultHasher::new();
     node.hash(&mut hasher);
     hasher.finish()
