@@ -25,6 +25,6 @@ pub mod binary_tree;
 pub mod deque;
 pub mod doubly_linked_list;
 // Not usable, so not publicly exported
-pub mod graph;
 mod hash_table;
 pub mod singly_linked_list;
+pub mod undirected_graph;

@@ -1,9 +1,62 @@
+//! # Undirected Graph
+//!
+//! A structure that builds up an Adjacency List, based off the vertex and edges that are added to
+//! it. Once the graph has been constructed it's possible to both traverse all nodes and find
+//!  out if it's possible to traverse from one specific node to another (Maze solving).
+
 use crate::deque;
 use crate::singly_linked_list::SinglyLinkedList;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
 
+/// # Undirected Graph
+///
+/// A wrapper around an underlying adjacency list. The type of the graph `UndirectedGraph<T>` is
+/// constructable so long as `T` implements `Hash & Eq`. The graph does not consume any
+/// values in it's creation, instead just holding a reference to them, as such any
+/// data put into the graph must last at least as long as the graph itself.
+///
+/// # Examples
+///
+/// ```rust
+/// use::data_structures::undirected_graph::UndirectedGraph;
+///
+/// let mut graph = UndirectedGraph::new();
+///
+/// let data_1 = 10;
+/// let data_2 = 50;
+/// let data_3 = 100;
+/// let data_4 = 250;
+/// let data_5 = 500;
+///
+/// // Add the vertexes
+/// graph.add_vertex(&data_1);
+/// graph.add_vertex(&data_2);
+/// graph.add_vertex(&data_3);
+/// graph.add_vertex(&data_4);
+/// graph.add_vertex(&data_5);
+///
+/// // Add the edges
+/// graph.add_edge(&data_1, &data_2);
+/// graph.add_edge(&data_1, &data_3);
+/// graph.add_edge(&data_2, &data_4);
+/// graph.add_edge(&data_3, &data_5);
+///
+/// // Our graph can traverse from data 1 to data 5
+/// // Path: Data 1 -> Data 3 -> Data 5
+/// // So this should return true
+/// // Is performed through a Breadth First Search
+/// assert!(graph.can_traverse_to(&data_1, &data_5));
+///
+/// let expected = vec![&10, &100, &500, &50, &250];
+///
+/// // We can also traverse all nodes from the given start node
+/// // This is implemented as a Post-Order Depth First Search
+/// // So the path would be:
+/// // Path: Data 1 -> Data 3 -> Data 5 -> Data 2 -> Data 4
+/// assert_eq!(graph.traverse_all_nodes(&data_1), expected);
+/// ```
 #[derive(Default)]
 pub struct UndirectedGraph<'a, T>
 where
@@ -14,7 +67,7 @@ where
 }
 
 #[derive(Hash, PartialEq, Eq)]
-pub struct Node<'a, T>
+struct Node<'a, T>
 where
     T: Eq + Hash,
 {
@@ -38,6 +91,16 @@ impl<'a, T> UndirectedGraph<'a, T>
 where
     T: Eq + Hash,
 {
+    /// Constructs a new, empty `UndirectedGraph<T>`
+    /// where `T: Eq + Hash`
+    ///
+    /// # Examples
+    /// ```rust
+    /// use data_structures::undirected_graph::UndirectedGraph;
+    ///
+    /// let mut graph: UndirectedGraph<i32> = UndirectedGraph::new();
+    /// assert_eq!(graph.size(), 0)
+    /// ```
     pub fn new() -> Self {
         Self {
             adjacency_list: HashMap::new(),
@@ -45,6 +108,47 @@ where
         }
     }
 
+    /// Returns the number of vertexes in the graph
+    ///
+    /// # Examples
+    /// ```rust
+    /// use data_structures::undirected_graph::UndirectedGraph;
+    ///
+    /// let mut graph: UndirectedGraph<i32> = UndirectedGraph::new();
+    /// assert_eq!(graph.size(), 0);
+    ///
+    /// graph.add_vertex(&50);
+    /// assert_eq!(graph.size(), 1);
+    /// ```
+    pub fn size(&self) -> usize {
+        self.adjacency_list.len()
+    }
+
+    /// Returns true if the graph is empty, false if it contains 1 or more vertexes
+    ///
+    /// # Examples
+    /// ```rust
+    /// use data_structures::undirected_graph::UndirectedGraph;
+    ///
+    /// let mut graph: UndirectedGraph<i32> = UndirectedGraph::new();
+    /// assert!(graph.is_empty());
+    /// ```
+    pub fn is_empty(&self) -> bool {
+        self.adjacency_list.is_empty()
+    }
+
+    /// Adds a new vertex to the graph
+    ///
+    /// # Examples
+    /// ```rust
+    /// use data_structures::undirected_graph::UndirectedGraph;
+    ///
+    /// let mut graph = UndirectedGraph::new();
+    ///
+    /// graph.add_vertex(&50);
+    /// graph.add_vertex(&25);
+    /// assert_eq!(graph.size(), 2);
+    /// ```
     pub fn add_vertex(&mut self, value: &'a T) {
         let node = Node::new(value);
         let key = node.get_key();
@@ -53,6 +157,25 @@ where
         self.key_value_map.entry(key).or_insert(node);
     }
 
+    /// Removes a new vertex from the graph, returning an `Option<T>` if
+    /// the vertex is found, `None` if it isn't.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use data_structures::undirected_graph::UndirectedGraph;
+    ///
+    /// let mut graph = UndirectedGraph::new();
+    ///
+    /// let data_1 = 50;
+    /// let data_2 = 25;
+    ///
+    /// graph.add_vertex(&data_1);
+    /// graph.add_vertex(&data_2);
+    /// assert_eq!(graph.size(), 2);
+    ///
+    /// assert_eq!(graph.remove_vertex(&data_1), Some(&50));
+    /// assert_eq!(graph.size(), 1)
+    /// ```
     pub fn remove_vertex(&mut self, key: &T) -> Option<&T> {
         let key = get_key(key);
         let relations = self.adjacency_list.remove(&key);
@@ -68,6 +191,25 @@ where
         self.key_value_map.remove(&key).map(|node| node.value)
     }
 
+    /// Adds a new edge between the two vertexes
+    ///
+    /// # Examples
+    /// ```rust
+    /// use data_structures::undirected_graph::UndirectedGraph;
+    ///
+    /// let mut graph = UndirectedGraph::new();
+    ///
+    /// let data_1 = 50;
+    /// let data_2 = 25;
+    ///
+    /// graph.add_vertex(&data_1);
+    /// graph.add_vertex(&data_2);
+    /// assert_eq!(graph.size(), 2);
+    ///
+    /// graph.add_edge(&data_1, &data_2);
+    ///
+    /// assert_eq!(graph.get_relations(&data_1), Some(vec![&data_2]));
+    /// ```
     pub fn add_edge(&mut self, value_1: &T, value_2: &T) {
         let key1 = get_key(value_1);
         let key2 = get_key(value_2);
@@ -80,6 +222,28 @@ where
         }
     }
 
+    /// Adds removes an edge between two vertexes
+    ///
+    /// # Examples
+    /// ```rust
+    /// use data_structures::undirected_graph::UndirectedGraph;
+    ///
+    /// let mut graph = UndirectedGraph::new();
+    ///
+    /// let data_1 = 50;
+    /// let data_2 = 25;
+    ///
+    /// graph.add_vertex(&data_1);
+    /// graph.add_vertex(&data_2);
+    /// assert_eq!(graph.size(), 2);
+    ///
+    /// graph.add_edge(&data_1, &data_2);
+    ///
+    /// assert_eq!(graph.get_relations(&data_1), Some(vec![&data_2]));
+    ///
+    /// graph.remove_edge(&data_1, &data_2);
+    /// assert_eq!(graph.get_relations(&data_1), Some(vec![]));
+    /// ```
     pub fn remove_edge(&mut self, value_1: &T, value_2: &T) {
         let key_1 = get_key(value_1);
         let key_2 = get_key(value_2);
@@ -93,10 +257,53 @@ where
         }
     }
 
+    /// Returns true if a value is in the adjacency list, false if it isn't
+    ///
+    /// # Examples
+    /// ```rust
+    /// use data_structures::undirected_graph::UndirectedGraph;
+    ///
+    /// let mut graph = UndirectedGraph::new();
+    ///
+    /// let data_1 = 50;
+    /// let data_2 = 25;
+    /// let data_3 = 500;
+    ///
+    /// graph.add_vertex(&data_1);
+    /// graph.add_vertex(&data_2);
+    ///
+    /// assert!(graph.has(&data_1));
+    /// assert!(graph.has(&data_2));
+    /// assert!(!graph.has(&data_3));
+    /// ```
     pub fn has(&self, value: &T) -> bool {
         self.adjacency_list.contains_key(&get_key(value))
     }
 
+    /// Returns all the relationships that the given value has. If no
+    /// key is found `None` is returned.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use data_structures::undirected_graph::UndirectedGraph;
+    ///
+    /// let mut graph = UndirectedGraph::new();
+    ///
+    /// let data_1 = 50;
+    /// let data_2 = 25;
+    /// let data_3 = 10;
+    ///
+    /// graph.add_vertex(&data_1);
+    /// graph.add_vertex(&data_2);
+    /// graph.add_vertex(&data_3);
+    /// assert_eq!(graph.size(), 3);
+    ///
+    /// graph.add_edge(&data_1, &data_2);
+    /// graph.add_edge(&data_1, &data_3);
+    ///
+    /// assert_eq!(graph.get_relations(&data_1), Some(vec![&data_2, &data_3]));
+    /// ```
     pub fn get_relations(&self, value: &T) -> Option<Vec<&T>> {
         match self.adjacency_list.get(&get_key(value)) {
             Some(relations) => relations
@@ -107,10 +314,42 @@ where
         }
     }
 
+    /// Private API to get the relations of a node by it's key as
+    /// opposed to it's value
     fn _get_relations(&self, key: u64) -> Option<&Vec<u64>> {
         self.adjacency_list.get(&key)
     }
 
+    /// Conducts a Breadth First Search to determine whether or not
+    /// it is possible to traverse from the start node to the finish node in the
+    /// given graph.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use data_structures::undirected_graph::UndirectedGraph;
+    ///
+    /// let mut graph = UndirectedGraph::new();
+    ///
+    /// let data_1 = 50;
+    /// let data_2 = 25;
+    /// let data_3 = 10;
+    /// let data_4 = 100;
+    ///
+    /// graph.add_vertex(&data_1);
+    /// graph.add_vertex(&data_2);
+    /// graph.add_vertex(&data_3);
+    /// graph.add_vertex(&data_4);
+    /// assert_eq!(graph.size(), 4);
+    ///
+    /// graph.add_edge(&data_1, &data_2);
+    /// graph.add_edge(&data_2, &data_3);
+    /// graph.add_edge(&data_3, &data_4);
+    ///
+    /// assert!(graph.can_traverse_to(&data_1, &data_4));
+    /// graph.remove_vertex(&data_3);
+    /// assert!(!graph.can_traverse_to(&data_1, &data_4));
+    /// ```
     pub fn can_traverse_to(&self, start: &T, finish: &T) -> bool {
         if self.adjacency_list.is_empty() {
             return false;
@@ -141,6 +380,34 @@ where
         false
     }
 
+    /// Conducts a Post Order Depth First Search to traverse all nodes in the graph,
+    /// returning a Vec<&T> in the order the nodes are visited. If the graph has no
+    /// no nodes are in the graph an empty `Vec` is returned
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use data_structures::undirected_graph::UndirectedGraph;
+    ///
+    /// let mut graph = UndirectedGraph::new();
+    ///
+    /// let data_1 = 50;
+    /// let data_2 = 25;
+    /// let data_3 = 10;
+    /// let data_4 = 100;
+    ///
+    /// graph.add_vertex(&data_1);
+    /// graph.add_vertex(&data_2);
+    /// graph.add_vertex(&data_3);
+    /// graph.add_vertex(&data_4);
+    /// assert_eq!(graph.size(), 4);
+    ///
+    /// graph.add_edge(&data_1, &data_2);
+    /// graph.add_edge(&data_2, &data_3);
+    /// graph.add_edge(&data_3, &data_4);
+    ///
+    /// assert_eq!(graph.traverse_all_nodes(&data_1), vec![&50, &25, &10, &100]);
+    /// ```
     pub fn traverse_all_nodes(&self, start: &T) -> Vec<&T> {
         let mut result = Vec::new();
         if self.adjacency_list.is_empty() {
@@ -152,7 +419,7 @@ where
 
         let mut stack = SinglyLinkedList::new();
 
-        // Add the start to the necessary structures
+        // Depth first search pre-order
         stack.push(start);
 
         while let Some(next) = stack.pop() {
