@@ -78,12 +78,21 @@ where
     }
 }
 
+fn get_key<T>(node: &T) -> u64
+where
+    T: Eq + Hash,
+{
+    let mut hasher = DefaultHasher::new();
+    node.hash(&mut hasher);
+    hasher.finish()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn it_works() {
+    fn add_vertex_add_node() {
         let mut graph = UndirectedGraph::default();
 
         let str_1 = String::from("Key 1");
@@ -110,13 +119,48 @@ mod tests {
         assert!(graph.adjacency_list.get(&key_2).unwrap().contains(&key_1));
         assert!(graph.adjacency_list.get(&key_3).unwrap().contains(&key_1));
     }
-}
 
-fn get_key<T>(node: &T) -> u64
-where
-    T: Eq + Hash,
-{
-    let mut hasher = DefaultHasher::new();
-    node.hash(&mut hasher);
-    hasher.finish()
+    #[test]
+    fn has() {
+        let mut graph = UndirectedGraph::default();
+
+        let str_1 = String::from("Key 1");
+        let str_2 = String::from("Key 2");
+        let str_3 = String::from("Key 3");
+        let str_4 = String::from("Key 4");
+
+        graph.add_vertex(&str_1);
+        graph.add_vertex(&str_2);
+        graph.add_vertex(&str_3);
+
+        assert!(graph.has(&str_1));
+        assert!(graph.has(&str_2));
+        assert!(graph.has(&str_3));
+        assert!(!graph.has(&str_4));
+    }
+
+    #[test]
+    fn get_relations() {
+        let mut graph = UndirectedGraph::default();
+
+        let str_1 = String::from("Key 1");
+        let str_2 = String::from("Key 2");
+        let str_3 = String::from("Key 3");
+
+        graph.add_vertex(&str_1);
+        graph.add_vertex(&str_2);
+        graph.add_vertex(&str_3);
+
+        graph.add_edge(&str_1, &str_2);
+        graph.add_edge(&str_1, &str_3);
+
+        let result = graph.get_relations(&str_1).unwrap();
+        assert_eq!(result.len(), 2);
+        assert!(result.contains(&&str_2));
+        assert!(result.contains(&&str_3));
+
+        let result = graph.get_relations(&str_2).unwrap();
+        assert_eq!(result.len(), 1);
+        assert!(result.contains(&&str_1));
+    }
 }
