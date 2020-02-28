@@ -57,6 +57,83 @@ use std::hash::{Hash, Hasher};
 /// // Path: Data 1 -> Data 3 -> Data 5 -> Data 2 -> Data 4
 /// assert_eq!(graph.traverse_all_nodes(&data_1), expected);
 /// ```
+///
+/// More detailed example using non-primitive data structures
+/// ```rust
+/// use data_structures::undirected_graph::UndirectedGraph;
+/// #[derive(Hash, PartialEq, Eq, Debug)]
+/// struct City {
+///     name: String,
+///     population: u32,
+///     airport: String,
+///     country: String
+/// }
+///
+/// let new_york = City {
+///     name: "New York".to_string(),
+///     population: 8_623_000,
+///     airport: "JFK".to_string(),
+///     country: "USA".to_string(),
+/// };
+///
+/// let london = City {
+///     name: "London".to_string(),
+///     population: 8_900_000,
+///     airport: "Heathrow".to_string(),
+///     country: "UK".to_string(),
+/// };
+///
+/// let hong_kong = City {
+///     name: "Hong Kong".to_string(),
+///     population: 7_392_000,
+///     airport: "Hong Kong International".to_string(),
+///     country: "China".to_string(),
+/// };
+///
+/// let sydney = City {
+///     name: "Sydney".to_string(),
+///     population: 5_230_000,
+///     airport: "Sydney".to_string(),
+///     country: "Australia".to_string(),
+/// };
+///
+/// let johannesburg = City {
+///     name: "Johannesburg".to_string(),
+///     population: 5_635_000,
+///     airport: "O.R. Tambo International".to_string(),
+///     country: "South Africa".to_string(),
+/// };
+///
+/// let mut graph = UndirectedGraph::new();
+/// graph.add_vertex(&new_york);
+/// graph.add_vertex(&london);
+/// graph.add_vertex(&hong_kong);
+/// graph.add_vertex(&sydney);
+/// graph.add_vertex(&johannesburg);
+///
+/// graph.add_edge(&new_york, &london);
+/// graph.add_edge(&new_york, &hong_kong);
+/// graph.add_edge(&london, &hong_kong);
+/// graph.add_edge(&london, &johannesburg);
+/// graph.add_edge(&hong_kong, &sydney);
+/// graph.add_edge(&johannesburg, &sydney);
+///
+/// assert_eq!(graph.size(), 5);
+///
+/// assert_eq!(graph.get_relations(&sydney), Some(vec![&hong_kong, &johannesburg]));
+/// assert!(graph.can_traverse_to(&new_york, &johannesburg));
+///
+/// graph.remove_edge(&london, &johannesburg);
+/// assert_eq!(graph.get_relations(&london), Some(vec![&new_york, &hong_kong]));
+///
+/// assert_eq!(graph.remove_vertex(&hong_kong), Some(&hong_kong));
+/// assert!(!graph.has(&hong_kong));
+/// assert_eq!(graph.size(), 4);
+///
+/// // Now we've removed Hong Kong, along with the edge from Johannesburg to London
+/// assert!(!graph.can_traverse_to(&new_york, &sydney));
+/// assert!(graph.can_traverse_to(&johannesburg, &sydney));
+/// ```
 #[derive(Default)]
 pub struct UndirectedGraph<'a, T>
 where
