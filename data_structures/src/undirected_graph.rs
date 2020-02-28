@@ -1,8 +1,91 @@
 //! # Undirected Graph
 //!
 //! A structure that builds up an Adjacency List, based off the vertex and edges that are added to
-//! it. Once the graph has been constructed it's possible to both traverse all nodes and find
-//!  out if it's possible to traverse from one specific node to another (Maze solving).
+//! it. Once the graph has been constructed various methods are offered to traverse between nodes,
+//! retrieve the relationships between nodes, traverse across the entire structure and find out if
+//! it is actually possible to traverse between two specific nodes.
+//!
+//! ## Notes on Lifetimes
+//! The graph does not consume any values, therefore the values that are being used to construct
+//! the graph (lets call it `'a` for this example) must live at least as long as the graph itself
+//! (`'b`), so `'a > 'b`.
+//!
+//! # Examples
+//! ```rust
+//! use data_structures::undirected_graph::UndirectedGraph;
+//! #[derive(Hash, PartialEq, Eq, Debug)]
+//! struct City {
+//!     name: String,
+//!     population: u32,
+//!     airport: String,
+//!     country: String
+//! }
+//!
+//! let new_york = City {
+//!     name: "New York".to_string(),
+//!     population: 8_623_000,
+//!     airport: "JFK".to_string(),
+//!     country: "USA".to_string(),
+//! };
+//!
+//! let london = City {
+//!     name: "London".to_string(),
+//!     population: 8_900_000,
+//!     airport: "Heathrow".to_string(),
+//!     country: "UK".to_string(),
+//! };
+//!
+//! let hong_kong = City {
+//!     name: "Hong Kong".to_string(),
+//!     population: 7_392_000,
+//!     airport: "Hong Kong International".to_string(),
+//!     country: "China".to_string(),
+//! };
+//!
+//! let sydney = City {
+//!     name: "Sydney".to_string(),
+//!     population: 5_230_000,
+//!     airport: "Sydney".to_string(),
+//!     country: "Australia".to_string(),
+//! };
+//!
+//! let johannesburg = City {
+//!     name: "Johannesburg".to_string(),
+//!     population: 5_635_000,
+//!     airport: "O.R. Tambo International".to_string(),
+//!     country: "South Africa".to_string(),
+//! };
+//!
+//! let mut graph = UndirectedGraph::new();
+//! graph.add_vertex(&new_york);
+//! graph.add_vertex(&london);
+//! graph.add_vertex(&hong_kong);
+//! graph.add_vertex(&sydney);
+//! graph.add_vertex(&johannesburg);
+//!
+//! graph.add_edge(&new_york, &london);
+//! graph.add_edge(&new_york, &hong_kong);
+//! graph.add_edge(&london, &hong_kong);
+//! graph.add_edge(&london, &johannesburg);
+//! graph.add_edge(&hong_kong, &sydney);
+//! graph.add_edge(&johannesburg, &sydney);
+//!
+//! assert_eq!(graph.size(), 5);
+//!
+//! assert_eq!(graph.get_relations(&sydney), Some(vec![&hong_kong, &johannesburg]));
+//! assert!(graph.can_traverse_to(&new_york, &johannesburg));
+//!
+//! graph.remove_edge(&london, &johannesburg);
+//! assert_eq!(graph.get_relations(&london), Some(vec![&new_york, &hong_kong]));
+//!
+//! assert_eq!(graph.remove_vertex(&hong_kong), Some(&hong_kong));
+//! assert!(!graph.has(&hong_kong));
+//! assert_eq!(graph.size(), 4);
+//!
+//! // Now we've removed Hong Kong, along with the edge from Johannesburg to London
+//! assert!(!graph.can_traverse_to(&new_york, &sydney));
+//! assert!(graph.can_traverse_to(&johannesburg, &sydney));
+//! ```
 
 use crate::deque;
 use crate::singly_linked_list::SinglyLinkedList;
