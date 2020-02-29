@@ -91,9 +91,21 @@
 
 use crate::deque;
 use crate::singly_linked_list::SinglyLinkedList;
+use std::cmp::Ordering;
 use std::collections::hash_map::DefaultHasher;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::hash::{Hash, Hasher};
+use std::ops::Add;
+
+/// Helper method for retrieving the hash of a reference to a value
+fn get_key<T>(node: &T) -> u64
+where
+    T: PartialEq + Hash,
+{
+    let mut hasher = DefaultHasher::new();
+    node.hash(&mut hasher);
+    hasher.finish()
+}
 
 /// # Graph
 ///
@@ -105,6 +117,7 @@ use std::hash::{Hash, Hasher};
 /// at least as long as the graph itself.
 ///
 /// ## Edges
+///
 /// Each edge between vertexes in the graph must have both a direction and a weight. An enum
 /// [`EdgeDirection`] is provided which can either be `Single`, for a directed edge, or `Bi`
 /// for a bi-directional edge. The weighting on the graph can be anything, provided it
@@ -232,129 +245,17 @@ use std::hash::{Hash, Hasher};
 pub struct Graph<'a, T, W>
 where
     T: Eq + Hash,
-    W: PartialOrd + PartialEq,
+    W: Ord + PartialEq + Clone + Add<Output = W>,
 {
     adjacency_list: HashMap<u64, Vec<Edge<'a, T, W>>>,
     key_value_map: HashMap<u64, Vertex<'a, T>>,
 }
 
-#[derive(Hash, PartialEq, Eq)]
-struct Vertex<'a, T>
-where
-    T: Eq + Hash,
-{
-    value: &'a T,
-}
-
-/// A private data structure that holds the relationships between vertexes.
-///
-/// The `direction member` holds the type of edge that it is, along with
-/// the node that this edge connects to. As edges are created and inserted into the
-/// in a graph in a controlled manner the way to read the data flow would be:
-///
-/// `Graph.adjacency_list[from_vertex] : [Edge.direction(to_vertex)]`
-///
-/// All of the edges that a vertex is connected to is stored in it's corresponding
-/// entry in it's adjacency list.
-/// In the event that the type of Edge is `Single`, then it is only added in the
-/// start vertexes list of relationships. If the type of edge is `Bi`, then it is
-/// added in both vertexes relationships
-#[derive(Eq, PartialEq)]
-struct Edge<'a, T, W>
-where
-    W: PartialOrd + PartialEq,
-    T: Eq + Hash,
-{
-    direction: Direction<'a, T>,
-    weight: W,
-}
-
-/// An enum declaring the type of edge that is
-/// being added to the graph.
-///
-/// Either it is:
-/// - `Single` for a directed edge
-/// - `Bi` for a Bi-directional (undirected) edge
-#[derive(Copy, Clone, Eq, PartialEq)]
-pub enum EdgeDirection {
-    Single,
-    Bi,
-}
-
-/// Private API which wraps the value within the direction, removing the need for
-/// an additional data field within the Edge
-#[derive(Eq, PartialEq)]
-enum Direction<'a, T>
-where
-    T: Eq + Hash,
-{
-    Single(Vertex<'a, T>),
-    Bi(Vertex<'a, T>),
-}
-
-impl<'a, T, W> Edge<'a, T, W>
-where
-    W: PartialOrd + Clone,
-    T: Eq + Hash,
-{
-    fn new(direction: Direction<'a, T>, weight: W) -> Self {
-        Self { direction, weight }
-    }
-
-    fn direction(&self) -> EdgeDirection {
-        match &self.direction {
-            Direction::Single(_) => EdgeDirection::Single,
-            Direction::Bi(_) => EdgeDirection::Bi,
-        }
-    }
-
-    fn weight(&self) -> &W {
-        &self.weight
-    }
-}
-
-impl<'a, T, W> Hash for Edge<'a, T, W>
-where
-    T: Eq + Hash,
-    W: PartialOrd + Clone,
-{
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        match &self.direction {
-            Direction::Single(node) => node.hash(state),
-            Direction::Bi(node) => node.hash(state),
-        }
-    }
-}
-
-impl EdgeDirection {
-    fn convert<'a, T>(&self, node: &'a T) -> Direction<'a, T>
-    where
-        T: Eq + Hash,
-    {
-        match &self {
-            EdgeDirection::Single => Direction::Single(Vertex::new(node)),
-            EdgeDirection::Bi => Direction::Bi(Vertex::new(node)),
-        }
-    }
-}
-
-impl<'a, T> Vertex<'a, T>
-where
-    T: Hash + Eq,
-{
-    pub fn new(node: &'a T) -> Self {
-        Self { value: node }
-    }
-
-    pub fn get_key(&self) -> u64 {
-        get_key(&self)
-    }
-}
-
+/// Public API
 impl<'a, T, W> Graph<'a, T, W>
 where
     T: Eq + Hash,
-    W: PartialOrd + Clone,
+    W: Ord + PartialEq + Clone + Add<Output = W>,
 {
     /// Constructs a new, empty `Graph<T>`
     /// where `T: Eq + Hash`
@@ -542,12 +443,8 @@ where
             relations.retain(|relation_key| {
                 let cmp = get_key(relation_key) != target_key;
                 if !cmp {
-                    match relation_key.direction() {
-                        EdgeDirection::Bi => {
-                            println!("Setting is directional to false, {}", is_directional);
-                            is_directional = false;
-                        }
-                        _ => {}
+                    if let EdgeDirection::Bi = relation_key.direction() {
+                        is_directional = false;
                     }
                 }
                 cmp
@@ -617,12 +514,6 @@ where
                 .collect(),
             None => None,
         }
-    }
-    //
-    /// Private API to get the relations of a node by it's key as
-    /// opposed to it's value
-    fn _get_relations(&self, key: u64) -> Option<&Vec<Edge<T, W>>> {
-        self.adjacency_list.get(&key)
     }
 
     /// Conducts a Breadth First Search to determine whether or not
@@ -746,15 +637,270 @@ where
         }
         result
     }
+
+    /// Computes the shortest path between two vertices using Dijstra's Shortest Path
+    /// algorithm. If a shortest path is found, it is returned as an `Option<Vec<&T>`,
+    /// with the start of the `Vec` being the start of the path. If no path is possible
+    /// then `None` is returned
+    ///
+    /// # Examples
+    /// ```rust
+    ///
+    /// ```
+    pub fn dijkstras_shortest_path(
+        &self,
+        start: &'a T,
+        finish: &'a T,
+        min_weighting: W,
+    ) -> Option<Vec<&T>> {
+        if start == finish {
+            return Some(vec![start]);
+        }
+
+        let finish_key = get_key(finish);
+
+        let mut queue = BinaryHeap::new();
+        let mut distances = HashMap::new();
+        let mut previous = HashMap::new();
+        let mut visited = HashSet::new();
+
+        self.adjacency_list.keys().into_iter().for_each(|key| {
+            distances.insert(*key, None);
+            previous.insert(*key, None);
+        });
+
+        let start_key = get_key(start);
+        if let Some(start_value) = distances.get_mut(&start_key) {
+            *start_value = Some(min_weighting.clone());
+        };
+
+        let start_edge = Edge::new(Direction::Single(Vertex::new(start)), min_weighting);
+        queue.push(&start_edge);
+        visited.insert(start_key);
+
+        let mut current_key;
+        let mut result = Vec::new();
+        while let Some(next) = queue.pop() {
+            current_key = next.target_key();
+            visited.insert(current_key);
+
+            if current_key == finish_key {
+                result.push(current_key);
+                while let Some(previous_node) = previous
+                    .get(&current_key)
+                    .expect("Key should have already been added to previous")
+                {
+                    result.push(*previous_node);
+                    current_key = *previous_node;
+                }
+                break;
+            }
+
+            if let Some(siblings) = self.adjacency_list.get(&current_key) {
+                for next_vertex in siblings.iter() {
+                    let sibling_key = get_key(next_vertex);
+                    if visited.contains(&sibling_key) {
+                        continue;
+                    }
+                    queue.push(&next_vertex);
+
+                    if let Some(distance) = distances.get(&current_key) {
+                        let mut candidate = match distance {
+                            Some(distance) => {
+                                W::from(distance.clone() + next_vertex.weight().clone())
+                            }
+                            None => next_vertex.weight().clone(),
+                        };
+
+                        let distance_weight = distances
+                            .get_mut(&sibling_key)
+                            .expect("This unwrap should be safe as we've added it in to the keys");
+
+                        match distance_weight {
+                            Some(weight) => {
+                                if &mut candidate < weight {
+                                    *weight = candidate;
+                                    if let Some(sibling) = previous.get_mut(&sibling_key) {
+                                        *sibling = Some(current_key);
+                                    }
+                                }
+                            }
+                            None => {
+                                distances.insert(sibling_key, Some(candidate));
+                                if let Some(sibling) = previous.get_mut(&sibling_key) {
+                                    *sibling = Some(current_key);
+                                }
+                            }
+                        };
+                    }
+                }
+            }
+        }
+
+        match result.is_empty() {
+            true => None,
+            false => Some(
+                result
+                    .into_iter()
+                    .rev()
+                    .map(|key| self.key_value_map.get(&key).unwrap().value)
+                    .collect(),
+            ),
+        }
+    }
 }
 
-fn get_key<T>(node: &T) -> u64
+/// Private API
+impl<'a, T, W> Graph<'a, T, W>
 where
-    T: PartialEq + Hash,
+    T: Eq + Hash,
+    W: Ord + PartialEq + Clone + Add<Output = W>,
 {
-    let mut hasher = DefaultHasher::new();
-    node.hash(&mut hasher);
-    hasher.finish()
+    /// Retrieve the relations of a node by it's key as
+    /// opposed to it's value
+    fn _get_relations(&self, key: u64) -> Option<&Vec<Edge<T, W>>> {
+        self.adjacency_list.get(&key)
+    }
+}
+
+/// An enum declaring the type of edge that is
+/// being added to the graph.
+///
+/// Either it is:
+/// - `Single` for a directed edge
+/// - `Bi` for a Bi-directional (undirected) edge
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub enum EdgeDirection {
+    Single,
+    Bi,
+}
+
+#[derive(Hash, PartialEq, Eq)]
+struct Vertex<'a, T>
+where
+    T: Eq + Hash,
+{
+    value: &'a T,
+}
+
+/// A private data structure that holds the relationships between vertexes.
+///
+/// The `direction member` holds the type of edge that it is, along with
+/// the node that this edge connects to. As edges are created and inserted into the
+/// in a graph in a controlled manner the way to read the data flow would be:
+///
+/// `Graph.adjacency_list[from_vertex] : [Edge.direction(to_vertex)]`
+///
+/// All of the edges that a vertex is connected to is stored in it's corresponding
+/// entry in it's adjacency list.
+/// In the event that the type of Edge is `Single`, then it is only added in the
+/// start vertexes list of relationships. If the type of edge is `Bi`, then it is
+/// added in both vertexes relationships
+#[derive(Eq, PartialEq)]
+struct Edge<'a, T, W>
+where
+    W: Ord + PartialEq + Clone + Add<Output = W>,
+    T: Eq + Hash,
+{
+    direction: Direction<'a, T>,
+    weight: W,
+}
+
+/// Private enum which wraps the value within the direction, removing the need for
+/// an additional data field within the Edge
+#[derive(Eq, PartialEq)]
+enum Direction<'a, T>
+where
+    T: Eq + Hash,
+{
+    Single(Vertex<'a, T>),
+    Bi(Vertex<'a, T>),
+}
+
+impl<'a, T, W> Edge<'a, T, W>
+where
+    W: Ord + PartialEq + Clone + Add<Output = W>,
+    T: Eq + Hash,
+{
+    fn new(direction: Direction<'a, T>, weight: W) -> Self {
+        Self { direction, weight }
+    }
+
+    fn direction(&self) -> EdgeDirection {
+        match &self.direction {
+            Direction::Single(_) => EdgeDirection::Single,
+            Direction::Bi(_) => EdgeDirection::Bi,
+        }
+    }
+
+    fn target_key(&self) -> u64 {
+        match &self.direction {
+            Direction::Single(node) => get_key(node),
+            Direction::Bi(node) => get_key(node),
+        }
+    }
+
+    fn weight(&self) -> &W {
+        &self.weight
+    }
+}
+
+impl<'a, T, W> Ord for Edge<'a, T, W>
+where
+    T: Eq + Hash,
+    W: Ord + PartialEq + Clone + Add<Output = W>,
+{
+    fn cmp(&self, other: &Self) -> Ordering {
+        other.weight().cmp(self.weight())
+    }
+}
+
+impl<'a, T, W> PartialOrd for Edge<'a, T, W>
+where
+    T: Eq + Hash,
+    W: Ord + PartialEq + Clone + Add<Output = W>,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<'a, T, W> Hash for Edge<'a, T, W>
+where
+    T: Eq + Hash,
+    W: Ord + PartialEq + Clone + Add<Output = W>,
+{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match &self.direction {
+            Direction::Single(node) => node.hash(state),
+            Direction::Bi(node) => node.hash(state),
+        }
+    }
+}
+
+impl EdgeDirection {
+    fn convert<'a, T>(&self, node: &'a T) -> Direction<'a, T>
+    where
+        T: Eq + Hash,
+    {
+        match &self {
+            EdgeDirection::Single => Direction::Single(Vertex::new(node)),
+            EdgeDirection::Bi => Direction::Bi(Vertex::new(node)),
+        }
+    }
+}
+
+impl<'a, T> Vertex<'a, T>
+where
+    T: Hash + Eq,
+{
+    pub fn new(node: &'a T) -> Self {
+        Self { value: node }
+    }
+
+    pub fn get_key(&self) -> u64 {
+        get_key(&self)
+    }
 }
 
 #[cfg(test)]
@@ -895,5 +1041,38 @@ mod tests {
         let result = graph.traverse_all_nodes(&str_1);
         let expected = vec![&str_1, &str_3, &str_2, &str_4];
         assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_dijkstras() {
+        let mut graph = Graph::new();
+
+        let a = String::from("A");
+        let b = String::from("B");
+        let c = String::from("C");
+        let d = String::from("D");
+        let e = String::from("E");
+        let f = String::from("F");
+
+        graph.add_vertex(&a);
+        graph.add_vertex(&b);
+        graph.add_vertex(&c);
+        graph.add_vertex(&d);
+        graph.add_vertex(&e);
+        graph.add_vertex(&f);
+
+        graph.add_edge(&a, &b, 4, EdgeDirection::Bi);
+        graph.add_edge(&a, &c, 2, EdgeDirection::Bi);
+        graph.add_edge(&b, &e, 3, EdgeDirection::Bi);
+        graph.add_edge(&c, &d, 2, EdgeDirection::Bi);
+        graph.add_edge(&c, &f, 4, EdgeDirection::Bi);
+        graph.add_edge(&d, &e, 3, EdgeDirection::Bi);
+        graph.add_edge(&d, &f, 1, EdgeDirection::Bi);
+        graph.add_edge(&e, &f, 1, EdgeDirection::Bi);
+
+        assert_eq!(
+            graph.dijkstras_shortest_path(&a, &e, 0),
+            Some(vec![&a, &c, &d, &f, &e])
+        );
     }
 }

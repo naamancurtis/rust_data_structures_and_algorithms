@@ -185,7 +185,7 @@ pub struct BinaryHeap<'a, T> {
 }
 
 /// Specifies whether the Heap Type should be a Maximum Binary Heap, or Minimum Binary Heap
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum BinaryHeapType {
     Max,
     Min,
@@ -278,6 +278,35 @@ impl<'a, T> BinaryHeap<'a, T> {
     /// ```
     pub fn is_empty(&self) -> bool {
         self.heap.is_empty()
+    }
+
+    /// Returns the type of the Binary Heap
+    ///
+    /// # Examples
+    /// ```rust
+    /// use data_structures::binary_heap::{BinaryHeap, BinaryHeapType};
+    ///
+    /// let mut heap: BinaryHeap<i32> = BinaryHeap::new(BinaryHeapType::Max);
+    ///
+    /// assert_eq!(heap.type_of_heap(), BinaryHeapType::Max);
+    /// ```
+    pub fn type_of_heap(&self) -> BinaryHeapType {
+        self.heap_type
+    }
+
+    /// Returns the type of comparator used when sorting the Heap
+    ///
+    /// # Examples
+    /// ```rust
+    /// use data_structures::binary_heap::{BinaryHeap, BinaryHeapType};
+    /// use std::cmp::Ordering;
+    ///
+    /// let mut heap: BinaryHeap<i32> = BinaryHeap::new(BinaryHeapType::Max);
+    ///
+    /// assert_eq!(heap.comparator(), Ordering::Greater);
+    /// ```
+    pub fn comparator(&self) -> Ordering {
+        self.comparator
     }
 
     /// Returns the depth of the binary heap
