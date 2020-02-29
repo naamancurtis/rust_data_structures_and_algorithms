@@ -10,6 +10,7 @@ A Cargo Workspace storing practice implementations of various data structures an
  
 #### Graphs
  - Undirected Graph
+ - Graph _(Directed & Weighted)_
 
 ##### Trees
  - Binary Tree

@@ -9,6 +9,7 @@
 //!
 //! ## Graphs
 //! - Undirected Graph
+//! - Graph _(Directed & Weighted)_
 //!
 //! ### Trees
 //! - Binary Tree - _Used to demonstrate traversal schemes_
@@ -24,7 +25,7 @@ pub mod binary_search_tree;
 pub mod binary_tree;
 pub mod deque;
 pub mod doubly_linked_list;
-// Not usable, so not publicly exported
-mod hash_table;
+pub mod graph;
+mod hash_table; // Not usable, so not publicly exported
 pub mod singly_linked_list;
 pub mod undirected_graph;
