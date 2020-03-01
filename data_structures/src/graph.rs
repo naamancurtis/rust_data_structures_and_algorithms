@@ -30,6 +30,13 @@
 //!     country: "USA".to_string(),
 //! };
 //!
+//! let san_francisco = City {
+//!     name: "San Francisco".to_string(),
+//!     population: 884_363,
+//!     airport: "San Francisco International".to_string(),
+//!     country: "USA".to_string(),
+//! };
+//!
 //! let london = City {
 //!     name: "London".to_string(),
 //!     population: 8_900_000,
@@ -42,6 +49,13 @@
 //!     population: 7_392_000,
 //!     airport: "Hong Kong International".to_string(),
 //!     country: "China".to_string(),
+//! };
+//!
+//! let singapore = City {
+//!     name: "Singapore".to_string(),
+//!     population: 5_612_000,
+//!     airport: "Singapore Changi".to_string(),
+//!     country: "Singapore".to_string(),
 //! };
 //!
 //! let sydney = City {
@@ -60,33 +74,60 @@
 //!
 //! let mut graph = Graph::new();
 //! graph.add_vertex(&new_york);
+//! graph.add_vertex(&san_francisco);
+//! graph.add_vertex(&singapore);
 //! graph.add_vertex(&london);
 //! graph.add_vertex(&hong_kong);
 //! graph.add_vertex(&sydney);
 //! graph.add_vertex(&johannesburg);
 //!
-//! graph.add_edge(&new_york, &london, 10, EdgeDirection::Bi);
-//! graph.add_edge(&new_york, &hong_kong, 15, EdgeDirection::Bi);
-//! graph.add_edge(&london, &hong_kong, 7, EdgeDirection::Bi);
-//! graph.add_edge(&london, &johannesburg, 18, EdgeDirection::Bi);
-//! graph.add_edge(&hong_kong, &sydney, 13, EdgeDirection::Bi);
-//! graph.add_edge(&johannesburg, &sydney, 8, EdgeDirection::Bi);
+//! // Adding the price of flights between each airport
+//! graph.add_edge(&new_york, &london, 225, EdgeDirection::Bi);
+//! graph.add_edge(&new_york, &san_francisco, 154, EdgeDirection::Bi);
+//! graph.add_edge(&new_york, &johannesburg, 431, EdgeDirection::Single);
 //!
-//! assert_eq!(graph.size(), 5);
+//! graph.add_edge(&london, &hong_kong, 391, EdgeDirection::Bi);
+//! graph.add_edge(&london, &johannesburg, 823, EdgeDirection::Bi);
+//! graph.add_edge(&london, &san_francisco, 391, EdgeDirection::Bi);
+//! graph.add_edge(&london, &singapore, 447, EdgeDirection::Bi);
 //!
-//! assert_eq!(graph.get_relations(&sydney), Some(vec![&hong_kong, &johannesburg]));
+//! graph.add_edge(&hong_kong, &new_york, 624, EdgeDirection::Single);
+//! graph.add_edge(&hong_kong, &sydney, 494, EdgeDirection::Bi);
+//! graph.add_edge(&hong_kong, &san_francisco, 565, EdgeDirection::Single);
+//! graph.add_edge(&hong_kong, &singapore, 123, EdgeDirection::Bi);
+//!
+//! graph.add_edge(&johannesburg, &sydney, 820, EdgeDirection::Single);
+//! graph.add_edge(&sydney, &san_francisco, 447, EdgeDirection::Bi);
+//!
+//! assert_eq!(graph.size(), 7);
+//!
+//! assert_eq!(graph.get_relations(&hong_kong), Some(vec![&london, &new_york, &sydney, &san_francisco, &singapore]));
 //! assert!(graph.can_traverse_to(&new_york, &johannesburg));
 //!
-//! graph.remove_edge(&london, &johannesburg);
-//! assert_eq!(graph.get_relations(&london), Some(vec![&new_york, &hong_kong]));
+//! // However given the 1 way connections, New York isn't connected to Hong Kong
+//! assert_eq!(graph.get_relations(&new_york), Some(vec![&london, &san_francisco, &johannesburg]));
 //!
-//! assert_eq!(graph.remove_vertex(&hong_kong), Some(&hong_kong));
-//! assert!(!graph.has(&hong_kong));
-//! assert_eq!(graph.size(), 4);
+//! let new_york_to_hong_kong = graph.dijkstras_shortest_path(&new_york, &hong_kong, 0);
+//! assert_eq!(new_york_to_hong_kong, Some((vec![&new_york, &london, &hong_kong], 225 + 391)));
 //!
-//! // Now we've removed Hong Kong, along with the edge from Johannesburg to London
-//! assert!(!graph.can_traverse_to(&new_york, &sydney));
+//! let sydney_to_johannesburg = graph.dijkstras_shortest_path(&sydney, &johannesburg, 0);
+//! assert_eq!(sydney_to_johannesburg, Some((vec![&sydney, &san_francisco, &new_york, &johannesburg], 447 + 154 + 431)));
+//!
+//! assert_eq!(graph.remove_vertex(&london), Some(&london));
+//! assert!(!graph.has(&london));
+//! assert_eq!(graph.size(), 6);
+//!
+//! graph.remove_edge(&san_francisco, &sydney);
+//! graph.remove_edge(&hong_kong, &sydney);
+//!
+//! // Now we've removed London and the routes between San Francisco and Sydney and Hong Kong and Sydney
+//! // We can fly from Johannesburg to Sydney, but not from Sydney to Johannesburg
+//!
+//! assert!(!graph.can_traverse_to(&sydney, &johannesburg));
 //! assert!(graph.can_traverse_to(&johannesburg, &sydney));
+//!
+//! let sydney_to_johannesburg = graph.dijkstras_shortest_path(&sydney, &johannesburg, 0);
+//! assert_eq!(sydney_to_johannesburg, None);
 //! ```
 
 use crate::deque;
@@ -183,6 +224,13 @@ where
 ///     country: "USA".to_string(),
 /// };
 ///
+/// let san_francisco = City {
+///     name: "San Francisco".to_string(),
+///     population: 884_363,
+///     airport: "San Francisco International".to_string(),
+///     country: "USA".to_string(),
+/// };
+///
 /// let london = City {
 ///     name: "London".to_string(),
 ///     population: 8_900_000,
@@ -195,6 +243,13 @@ where
 ///     population: 7_392_000,
 ///     airport: "Hong Kong International".to_string(),
 ///     country: "China".to_string(),
+/// };
+///
+/// let singapore = City {
+///     name: "Singapore".to_string(),
+///     population: 5_612_000,
+///     airport: "Singapore Changi".to_string(),
+///     country: "Singapore".to_string(),
 /// };
 ///
 /// let sydney = City {
@@ -213,33 +268,60 @@ where
 ///
 /// let mut graph = Graph::new();
 /// graph.add_vertex(&new_york);
+/// graph.add_vertex(&san_francisco);
+/// graph.add_vertex(&singapore);
 /// graph.add_vertex(&london);
 /// graph.add_vertex(&hong_kong);
 /// graph.add_vertex(&sydney);
 /// graph.add_vertex(&johannesburg);
 ///
-/// graph.add_edge(&new_york, &london, 10, EdgeDirection::Bi);
-/// graph.add_edge(&new_york, &hong_kong, 15, EdgeDirection::Bi);
-/// graph.add_edge(&london, &hong_kong, 7, EdgeDirection::Bi);
-/// graph.add_edge(&london, &johannesburg, 18, EdgeDirection::Bi);
-/// graph.add_edge(&hong_kong, &sydney, 13, EdgeDirection::Bi);
-/// graph.add_edge(&johannesburg, &sydney, 8, EdgeDirection::Bi);
+/// // Adding the price of flights between each airport
+/// graph.add_edge(&new_york, &london, 225, EdgeDirection::Bi);
+/// graph.add_edge(&new_york, &san_francisco, 154, EdgeDirection::Bi);
+/// graph.add_edge(&new_york, &johannesburg, 431, EdgeDirection::Single);
 ///
-/// assert_eq!(graph.size(), 5);
+/// graph.add_edge(&london, &hong_kong, 391, EdgeDirection::Bi);
+/// graph.add_edge(&london, &johannesburg, 823, EdgeDirection::Bi);
+/// graph.add_edge(&london, &san_francisco, 391, EdgeDirection::Bi);
+/// graph.add_edge(&london, &singapore, 447, EdgeDirection::Bi);
 ///
-/// assert_eq!(graph.get_relations(&sydney), Some(vec![&hong_kong, &johannesburg]));
+/// graph.add_edge(&hong_kong, &new_york, 624, EdgeDirection::Single);
+/// graph.add_edge(&hong_kong, &sydney, 494, EdgeDirection::Bi);
+/// graph.add_edge(&hong_kong, &san_francisco, 565, EdgeDirection::Single);
+/// graph.add_edge(&hong_kong, &singapore, 123, EdgeDirection::Bi);
+///
+/// graph.add_edge(&johannesburg, &sydney, 820, EdgeDirection::Single);
+/// graph.add_edge(&sydney, &san_francisco, 447, EdgeDirection::Bi);
+///
+/// assert_eq!(graph.size(), 7);
+///
+/// assert_eq!(graph.get_relations(&hong_kong), Some(vec![&london, &new_york, &sydney, &san_francisco, &singapore]));
 /// assert!(graph.can_traverse_to(&new_york, &johannesburg));
 ///
-/// graph.remove_edge(&london, &johannesburg);
-/// assert_eq!(graph.get_relations(&london), Some(vec![&new_york, &hong_kong]));
+/// // However given the 1 way connections, New York isn't connected to Hong Kong
+/// assert_eq!(graph.get_relations(&new_york), Some(vec![&london, &san_francisco, &johannesburg]));
 ///
-/// assert_eq!(graph.remove_vertex(&hong_kong), Some(&hong_kong));
-/// assert!(!graph.has(&hong_kong));
-/// assert_eq!(graph.size(), 4);
+/// let new_york_to_hong_kong = graph.dijkstras_shortest_path(&new_york, &hong_kong, 0);
+/// assert_eq!(new_york_to_hong_kong, Some((vec![&new_york, &london, &hong_kong], 225 + 391)));
 ///
-/// // Now we've removed Hong Kong, along with the edge from Johannesburg to London
-/// assert!(!graph.can_traverse_to(&new_york, &sydney));
+/// let sydney_to_johannesburg = graph.dijkstras_shortest_path(&sydney, &johannesburg, 0);
+/// assert_eq!(sydney_to_johannesburg, Some((vec![&sydney, &san_francisco, &new_york, &johannesburg], 447 + 154 + 431)));
+///
+/// assert_eq!(graph.remove_vertex(&london), Some(&london));
+/// assert!(!graph.has(&london));
+/// assert_eq!(graph.size(), 6);
+///
+/// graph.remove_edge(&san_francisco, &sydney);
+/// graph.remove_edge(&hong_kong, &sydney);
+///
+/// // Now we've removed London and the routes between San Francisco and Sydney and Hong Kong and Sydney
+/// // We can fly from Johannesburg to Sydney, but not from Sydney to Johannesburg
+///
+/// assert!(!graph.can_traverse_to(&sydney, &johannesburg));
 /// assert!(graph.can_traverse_to(&johannesburg, &sydney));
+///
+/// let sydney_to_johannesburg = graph.dijkstras_shortest_path(&sydney, &johannesburg, 0);
+/// assert_eq!(sydney_to_johannesburg, None);
 /// ```
 #[derive(Default)]
 pub struct Graph<'a, T, W>
@@ -652,9 +734,9 @@ where
         start: &'a T,
         finish: &'a T,
         min_weighting: W,
-    ) -> Option<Vec<&T>> {
+    ) -> Option<(Vec<&T>, W)> {
         if start == finish {
-            return Some(vec![start]);
+            return Some((vec![start], min_weighting));
         }
 
         let finish_key = get_key(finish);
@@ -674,18 +756,25 @@ where
             *start_value = Some(min_weighting.clone());
         };
 
-        let start_edge = Edge::new(Direction::Single(Vertex::new(start)), min_weighting);
+        let start_edge = Edge::new(Direction::Single(Vertex::new(start)), min_weighting.clone());
         queue.push(&start_edge);
         visited.insert(start_key);
 
         let mut current_key;
         let mut result = Vec::new();
+        let mut total = min_weighting;
         while let Some(next) = queue.pop() {
             current_key = next.target_key();
             visited.insert(current_key);
 
             if current_key == finish_key {
                 result.push(current_key);
+                if let Some(total_distance) = distances.get(&current_key) {
+                    total = total_distance
+                        .as_ref()
+                        .expect("This value should have been set at least once")
+                        .clone();
+                }
                 while let Some(previous_node) = previous
                     .get(&current_key)
                     .expect("Key should have already been added to previous")
@@ -739,13 +828,14 @@ where
 
         match result.is_empty() {
             true => None,
-            false => Some(
+            false => Some((
                 result
                     .into_iter()
                     .rev()
                     .map(|key| self.key_value_map.get(&key).unwrap().value)
                     .collect(),
-            ),
+                total,
+            )),
         }
     }
 }
@@ -1072,7 +1162,7 @@ mod tests {
 
         assert_eq!(
             graph.dijkstras_shortest_path(&a, &e, 0),
-            Some(vec![&a, &c, &d, &f, &e])
+            Some((vec![&a, &c, &d, &f, &e], 6))
         );
     }
 }
