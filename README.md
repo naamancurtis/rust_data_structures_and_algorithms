@@ -12,7 +12,7 @@ A Cargo Workspace storing practice implementations of various data structures an
  - [Undirected Graph](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/data_structures/src/undirected_graph.rs)
     - Breadth First Search
     - Depth First Search
- - [Graph](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/data_structures/src/graph.rs) _(Directed & Weighted)_
+ - [Graph](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/data_structures/src/graph.rs) - _Optionally can be directed & weighted_
     - Breadth First Search
     - Depth First Search
     - Dijkstra's Shortest Path
@@ -25,8 +25,7 @@ A Cargo Workspace storing practice implementations of various data structures an
 
 ###### Heaps
  - [Binary Heap](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/data_structures/src/binary_heap.rs)
-   - Implementation contains a Min Heap, Max Heap
-   - Also contains an api for creating a Priority Queue
+   - API allows the creation of a Min Heap, Max Heap or Priority Queue
 
 ## [Problem Solving Patterns](https://github.com/naamancurtis/rust_data_structures_and_algorithms/tree/master/problem_solving_patterns/src)
  - [Frequency Counter](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/problem_solving_patterns/src/frequency_counter_pattern.rs)
