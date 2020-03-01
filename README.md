@@ -48,8 +48,12 @@ A Cargo Workspace storing practice implementations of various data structures an
 ## [Sample Problems](https://github.com/naamancurtis/rust_data_structures_and_algorithms/tree/master/sample_problems/src)
 - [Find availability in two calendars](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/sample_problems/src/find_availability_in_two_calendars.rs)
 
-## Workspace Documentation
-Most libraries are documented inline with `rustdoc`, to build the docs use [Cargo](https://doc.rust-lang.org/cargo/index.html). 
+## Interacting with this Repo
+
+If you've just stumbled across this Repo, you'll need Rust installed to use it. If you don't have Rust installed you can find the offical [getting started guide here](https://www.rust-lang.org/learn/get-started). Upon installing Rust, you'll also have access to `cargo` which is Rust's package manager and is generally the CLI used to interact with Rust code.
+
+### Code Documentation
+Most of the libraries in this workspace are documented inline with `rustdoc`, to build the docs use [Cargo](https://doc.rust-lang.org/cargo/index.html). 
 TL;DR: Navigate to the project root and run:
 
  ```shell script
@@ -61,11 +65,11 @@ cargo doc
 cargo doc --open
 ```
 
-## Tests
+### Tests
 Tests can be run throughout the entire workspace by running `cargo test` at the root project level. Alternatively tests
 can be run on each library by navigating to the library root and running the same command.
 
-### Resources used
+## Resources used
 - [JS Algorithms & Data Structures Masterclass - _Colt Steele_](https://www.udemy.com/course/js-algorithms-and-data-structures-masterclass/)
 - [Learning Rust with entirely too many Linked Lists](https://cglab.ca/~abeinges/blah/too-many-lists/book/README.html)
 - [Contain-RS](https://github.com/contain-rs)
