@@ -18,7 +18,7 @@
 //! the price of airline tickets as the weighting for each edge.
 //!
 //! ```rust
-//! use data_structures::graph::{Graph, EdgeDirection};
+//! use data_structures::graph::Graph;
 //!
 //! #[derive(Hash, PartialEq, Eq, Debug)]
 //! struct City {
@@ -90,22 +90,22 @@
 //! graph.add_vertex(&johannesburg);
 //!
 //! // Adding the price of flights between each airport
-//! graph.add_edge(&new_york, &london, 225, EdgeDirection::Bi);
-//! graph.add_edge(&new_york, &san_francisco, 154, EdgeDirection::Bi);
-//! graph.add_edge(&new_york, &johannesburg, 431, EdgeDirection::Single);
+//! graph.add_undirected_edge(&new_york, &london, 225);
+//! graph.add_undirected_edge(&new_york, &san_francisco, 154);
+//! graph.add_directed_edge(&new_york, &johannesburg, 431);
 //!
-//! graph.add_edge(&london, &hong_kong, 391, EdgeDirection::Bi);
-//! graph.add_edge(&london, &johannesburg, 823, EdgeDirection::Bi);
-//! graph.add_edge(&london, &san_francisco, 391, EdgeDirection::Bi);
-//! graph.add_edge(&london, &singapore, 447, EdgeDirection::Bi);
+//! graph.add_undirected_edge(&london, &hong_kong, 391);
+//! graph.add_undirected_edge(&london, &johannesburg, 823);
+//! graph.add_undirected_edge(&london, &san_francisco, 391);
+//! graph.add_undirected_edge(&london, &singapore, 447);
 //!
-//! graph.add_edge(&hong_kong, &new_york, 624, EdgeDirection::Single);
-//! graph.add_edge(&hong_kong, &sydney, 494, EdgeDirection::Bi);
-//! graph.add_edge(&hong_kong, &san_francisco, 565, EdgeDirection::Single);
-//! graph.add_edge(&hong_kong, &singapore, 123, EdgeDirection::Bi);
+//! graph.add_directed_edge(&hong_kong, &new_york, 624);
+//! graph.add_undirected_edge(&hong_kong, &sydney, 494);
+//! graph.add_directed_edge(&hong_kong, &san_francisco, 565);
+//! graph.add_undirected_edge(&hong_kong, &singapore, 123);
 //!
-//! graph.add_edge(&johannesburg, &sydney, 820, EdgeDirection::Single);
-//! graph.add_edge(&sydney, &san_francisco, 447, EdgeDirection::Bi);
+//! graph.add_directed_edge(&johannesburg, &sydney, 820);
+//! graph.add_undirected_edge(&sydney, &san_francisco, 447);
 //!
 //! assert_eq!(graph.size(), 7);
 //!
@@ -204,11 +204,17 @@ where
 /// for a bi-directional edge. The weighting on the graph can be anything, provided it
 /// implements both `PartialOrd + PartialEq`.
 ///
+/// ## Weighting
+///
+/// The **Weighting: `W`** of used for each edge in the graph must implement `Ord + PartialEq + Clone + Add<Output = W>`
+/// this is so that it can be used within the [`binary heap`] acting as a Priority Queue within some of the algorithms. See
+/// the offical rust docs for an example of how these traits need to be implemented. There are
+/// also additional examples below and on the [`summary page`].
+///
 /// # Examples
 ///
 /// ```rust
 /// use::data_structures::graph::Graph;
-/// use data_structures::graph::EdgeDirection;
 ///
 /// let mut graph = Graph::new();
 ///
@@ -226,10 +232,10 @@ where
 /// graph.add_vertex(&data_5);
 ///
 /// // Add the edges
-/// graph.add_edge(&data_1, &data_2, 5, EdgeDirection::Bi);
-/// graph.add_edge(&data_1, &data_3, 10, EdgeDirection::Bi);
-/// graph.add_edge(&data_2, &data_4, 15, EdgeDirection::Bi);
-/// graph.add_edge(&data_3, &data_5, 20, EdgeDirection::Bi);
+/// graph.add_undirected_edge(&data_1, &data_2, 5);
+/// graph.add_undirected_edge(&data_1, &data_3, 10);
+/// graph.add_undirected_edge(&data_2, &data_4, 15);
+/// graph.add_undirected_edge(&data_3, &data_5, 20);
 ///
 /// // Our graph can traverse from data 1 to data 5
 /// // Path: Data 1 -> Data 3 -> Data 5
@@ -248,121 +254,12 @@ where
 ///
 /// More detailed example using non-primitive data structures
 /// ```rust
-/// use data_structures::graph::{Graph, EdgeDirection};
-/// #[derive(Hash, PartialEq, Eq, Debug)]
-/// struct City {
-///     name: String,
-///     population: u32,
-///     airport: String,
-///     country: String
-/// }
-///
-/// let new_york = City {
-///     name: "New York".to_string(),
-///     population: 8_623_000,
-///     airport: "JFK".to_string(),
-///     country: "USA".to_string(),
-/// };
-///
-/// let san_francisco = City {
-///     name: "San Francisco".to_string(),
-///     population: 884_363,
-///     airport: "San Francisco International".to_string(),
-///     country: "USA".to_string(),
-/// };
-///
-/// let london = City {
-///     name: "London".to_string(),
-///     population: 8_900_000,
-///     airport: "Heathrow".to_string(),
-///     country: "UK".to_string(),
-/// };
-///
-/// let hong_kong = City {
-///     name: "Hong Kong".to_string(),
-///     population: 7_392_000,
-///     airport: "Hong Kong International".to_string(),
-///     country: "China".to_string(),
-/// };
-///
-/// let singapore = City {
-///     name: "Singapore".to_string(),
-///     population: 5_612_000,
-///     airport: "Singapore Changi".to_string(),
-///     country: "Singapore".to_string(),
-/// };
-///
-/// let sydney = City {
-///     name: "Sydney".to_string(),
-///     population: 5_230_000,
-///     airport: "Sydney".to_string(),
-///     country: "Australia".to_string(),
-/// };
-///
-/// let johannesburg = City {
-///     name: "Johannesburg".to_string(),
-///     population: 5_635_000,
-///     airport: "O.R. Tambo International".to_string(),
-///     country: "South Africa".to_string(),
-/// };
-///
-/// let mut graph = Graph::new();
-/// graph.add_vertex(&new_york);
-/// graph.add_vertex(&san_francisco);
-/// graph.add_vertex(&singapore);
-/// graph.add_vertex(&london);
-/// graph.add_vertex(&hong_kong);
-/// graph.add_vertex(&sydney);
-/// graph.add_vertex(&johannesburg);
-///
-/// // Adding the price of flights between each airport
-/// graph.add_edge(&new_york, &london, 225, EdgeDirection::Bi);
-/// graph.add_edge(&new_york, &san_francisco, 154, EdgeDirection::Bi);
-/// graph.add_edge(&new_york, &johannesburg, 431, EdgeDirection::Single);
-///
-/// graph.add_edge(&london, &hong_kong, 391, EdgeDirection::Bi);
-/// graph.add_edge(&london, &johannesburg, 823, EdgeDirection::Bi);
-/// graph.add_edge(&london, &san_francisco, 391, EdgeDirection::Bi);
-/// graph.add_edge(&london, &singapore, 447, EdgeDirection::Bi);
-///
-/// graph.add_edge(&hong_kong, &new_york, 624, EdgeDirection::Single);
-/// graph.add_edge(&hong_kong, &sydney, 494, EdgeDirection::Bi);
-/// graph.add_edge(&hong_kong, &san_francisco, 565, EdgeDirection::Single);
-/// graph.add_edge(&hong_kong, &singapore, 123, EdgeDirection::Bi);
-///
-/// graph.add_edge(&johannesburg, &sydney, 820, EdgeDirection::Single);
-/// graph.add_edge(&sydney, &san_francisco, 447, EdgeDirection::Bi);
-///
-/// assert_eq!(graph.size(), 7);
-///
-/// assert_eq!(graph.get_relations(&hong_kong), Some(vec![&london, &new_york, &sydney, &san_francisco, &singapore]));
-/// assert!(graph.can_traverse_to(&new_york, &johannesburg));
-///
-/// // However given the 1 way connections, New York isn't connected to Hong Kong
-/// assert_eq!(graph.get_relations(&new_york), Some(vec![&london, &san_francisco, &johannesburg]));
-///
-/// let new_york_to_hong_kong = graph.dijkstras_shortest_path(&new_york, &hong_kong, 0);
-/// assert_eq!(new_york_to_hong_kong, Some((vec![&new_york, &london, &hong_kong], 225 + 391)));
-///
-/// let sydney_to_johannesburg = graph.dijkstras_shortest_path(&sydney, &johannesburg, 0);
-/// assert_eq!(sydney_to_johannesburg, Some((vec![&sydney, &san_francisco, &new_york, &johannesburg], 447 + 154 + 431)));
-///
-/// assert_eq!(graph.remove_vertex(&london), Some(&london));
-/// assert!(!graph.has(&london));
-/// assert_eq!(graph.size(), 6);
-///
-/// graph.remove_edge(&san_francisco, &sydney);
-/// graph.remove_edge(&hong_kong, &sydney);
-///
-/// // Now we've removed London and the routes between San Francisco and Sydney and Hong Kong and Sydney
-/// // We can fly from Johannesburg to Sydney, but not from Sydney to Johannesburg
-///
-/// assert!(!graph.can_traverse_to(&sydney, &johannesburg));
-/// assert!(graph.can_traverse_to(&johannesburg, &sydney));
-///
-/// let sydney_to_johannesburg = graph.dijkstras_shortest_path(&sydney, &johannesburg, 0);
-/// assert_eq!(sydney_to_johannesburg, None);
+/// use data_structures::graph::Graph;
+/// // todo
 /// ```
+///
+/// [`summary page`]: ./index.html
+/// [`binary heap`]: https://doc.rust-lang.org/std/collections/binary_heap/index.html
 #[derive(Default)]
 pub struct Graph<'a, T, W>
 where
@@ -471,7 +368,7 @@ where
         if let Some(relations) = relations {
             relations
                 .iter()
-                .filter(|edge| edge.direction() == EdgeDirection::Bi)
+                .filter(|edge| edge.direction() == EdgeDirection::Undirected)
                 .map(|relation_key| get_key(relation_key))
                 .for_each(|relation_key| {
                     if let Some(relation) = self.adjacency_list.get_mut(&relation_key) {
@@ -483,11 +380,11 @@ where
         self.key_value_map.remove(&key).map(|node| node.value)
     }
 
-    /// Adds a new edge between the two vertexes
+    /// Adds a new directed edge between the two vertexes
     ///
     /// # Examples
     /// ```rust
-    /// use data_structures::graph::{Graph, EdgeDirection};
+    /// use data_structures::graph::Graph;
     ///
     /// let mut graph = Graph::new();
     ///
@@ -498,47 +395,44 @@ where
     /// graph.add_vertex(&data_2);
     /// assert_eq!(graph.size(), 2);
     ///
-    /// graph.add_edge(&data_1, &data_2, 10, EdgeDirection::Bi);
+    /// graph.add_directed_edge(&data_1, &data_2, 10);
     ///
     /// assert_eq!(graph.get_relations(&data_1), Some(vec![&data_2]));
+    /// assert_eq!(graph.get_relations(&data_2), None);
     /// ```
-    pub fn add_edge(
-        &mut self,
-        from_node: &'a T,
-        to_node: &'a T,
-        weight: W,
-        direction: EdgeDirection,
-    ) {
-        let _direction = direction.convert(to_node);
-        let edge = Edge::new(_direction, weight.clone());
-        let key = get_key(from_node);
+    pub fn add_directed_edge(&mut self, from_vertex: &'a T, to_vertex: &'a T, weight: W) {
+        self.add_edge(from_vertex, to_vertex, weight, EdgeDirection::Directed)
+    }
 
-        if let Some(connected_to) = self.adjacency_list.get_mut(&key) {
-            connected_to.push(edge);
-        }
-        // If it's a directed edge, we don't need to add it to the list of the finishing
-        // vertexes relationships - as we can't traverse from our finishing vertex back to the
-        // starting vertex
-        if direction == EdgeDirection::Single {
-            return;
-        }
-
-        // If it's undirected, then add the relationship into the finishing vertexes
-        // relationships too
-        let _direction = direction.convert(from_node);
-        let edge = Edge::new(_direction, weight);
-        let key = get_key(to_node);
-
-        if let Some(connected_to) = self.adjacency_list.get_mut(&key) {
-            connected_to.push(edge);
-        }
+    /// Adds a new undirected edge between the two vertexes
+    ///
+    /// # Examples
+    /// ```rust
+    /// use data_structures::graph::Graph;
+    ///
+    /// let mut graph = Graph::new();
+    ///
+    /// let data_1 = 50;
+    /// let data_2 = 25;
+    ///
+    /// graph.add_vertex(&data_1);
+    /// graph.add_vertex(&data_2);
+    /// assert_eq!(graph.size(), 2);
+    ///
+    /// graph.add_undirected_edge(&data_1, &data_2, 10);
+    ///
+    /// assert_eq!(graph.get_relations(&data_1), Some(vec![&data_2]));
+    /// assert_eq!(graph.get_relations(&data_2), Some(vec![&data_1]));
+    /// ```
+    pub fn add_undirected_edge(&mut self, vertex_1: &'a T, vertex_2: &'a T, weight: W) {
+        self.add_edge(vertex_1, vertex_2, weight, EdgeDirection::Undirected)
     }
 
     /// Adds removes an edge between two vertexes
     ///
     /// # Examples
     /// ```rust
-    /// use data_structures::graph::{Graph, EdgeDirection};
+    /// use data_structures::graph::Graph;
     ///
     /// let mut graph = Graph::new();
     ///
@@ -549,12 +443,12 @@ where
     /// graph.add_vertex(&data_2);
     /// assert_eq!(graph.size(), 2);
     ///
-    /// graph.add_edge(&data_1, &data_2, 10, EdgeDirection::Bi);
+    /// graph.add_undirected_edge(&data_1, &data_2, 10);
     ///
     /// assert_eq!(graph.get_relations(&data_1), Some(vec![&data_2]));
     ///
     /// graph.remove_edge(&data_1, &data_2);
-    /// assert_eq!(graph.get_relations(&data_1), Some(vec![]));
+    /// assert_eq!(graph.get_relations(&data_1), None);
     /// ```
     pub fn remove_edge(&mut self, value_1: &T, value_2: &T) {
         let key = get_key(value_1);
@@ -565,7 +459,7 @@ where
             relations.retain(|relation_key| {
                 let cmp = get_key(relation_key) != target_key;
                 if !cmp {
-                    if let EdgeDirection::Bi = relation_key.direction() {
+                    if let EdgeDirection::Undirected = relation_key.direction() {
                         is_directional = false;
                     }
                 }
@@ -605,7 +499,44 @@ where
     }
 
     /// Returns all the relationships that the given value has. If no
-    /// key is found `None` is returned.
+    /// relationships are found `None` is returned.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use data_structures::graph::Graph;
+    ///
+    /// let mut graph = Graph::new();
+    ///
+    /// let data_1 = 50;
+    /// let data_2 = 25;
+    /// let data_3 = 10;
+    ///
+    /// graph.add_vertex(&data_1);
+    /// graph.add_vertex(&data_2);
+    /// graph.add_vertex(&data_3);
+    /// assert_eq!(graph.size(), 3);
+    ///
+    /// graph.add_undirected_edge(&data_1, &data_2, 10);
+    /// graph.add_undirected_edge(&data_1, &data_3, 15);
+    ///
+    /// assert_eq!(graph.get_relations(&data_1), Some(vec![&data_2, &data_3]));
+    /// ```
+    pub fn get_relations(&self, value: &T) -> Option<Vec<&T>> {
+        match self.adjacency_list.get(&get_key(value)) {
+            Some(relations) => match relations.is_empty() {
+                true => None,
+                false => relations
+                    .iter()
+                    .map(|key| self.key_value_map.get(&get_key(key)).map(|node| node.value))
+                    .collect(),
+            },
+            None => None,
+        }
+    }
+
+    /// Returns information about the edge (it's direction and weighting) between
+    /// two vertexes, if no edge is found `None` is returned
     ///
     /// # Examples
     ///
@@ -623,19 +554,27 @@ where
     /// graph.add_vertex(&data_3);
     /// assert_eq!(graph.size(), 3);
     ///
-    /// graph.add_edge(&data_1, &data_2, 10, EdgeDirection::Bi);
-    /// graph.add_edge(&data_1, &data_3, 15, EdgeDirection::Bi);
+    /// graph.add_undirected_edge(&data_1, &data_2, 10);
+    /// graph.add_undirected_edge(&data_1, &data_3, 15);
     ///
-    /// assert_eq!(graph.get_relations(&data_1), Some(vec![&data_2, &data_3]));
+    /// assert_eq!(graph.get_edge(&data_1, &data_2), Some((EdgeDirection::Undirected, &10)));
     /// ```
-    pub fn get_relations(&self, value: &T) -> Option<Vec<&T>> {
-        match self.adjacency_list.get(&get_key(value)) {
-            Some(relations) => relations
+    pub fn get_edge(&self, from: &T, to: &T) -> Option<(EdgeDirection, &W)> {
+        let from_key = get_key(from);
+        let to_key = get_key(to);
+
+        if let Some(relations) = self.adjacency_list.get(&from_key) {
+            return match relations
                 .iter()
-                .map(|key| self.key_value_map.get(&get_key(key)).map(|node| node.value))
-                .collect(),
-            None => None,
+                .filter(|edge| get_key(edge) == to_key)
+                .peekable()
+                .peek()
+            {
+                Some(sibling) => Some((sibling.direction(), sibling.weight())),
+                None => None,
+            };
         }
+        None
     }
 
     /// Conducts a Breadth First Search to determine whether or not
@@ -645,7 +584,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use data_structures::graph::{Graph, EdgeDirection};
+    /// use data_structures::graph::Graph;
     ///
     /// let mut graph = Graph::new();
     ///
@@ -660,9 +599,9 @@ where
     /// graph.add_vertex(&data_4);
     /// assert_eq!(graph.size(), 4);
     ///
-    /// graph.add_edge(&data_1, &data_2, 10, EdgeDirection::Bi);
-    /// graph.add_edge(&data_2, &data_3, 15, EdgeDirection::Bi);
-    /// graph.add_edge(&data_3, &data_4, 20, EdgeDirection::Bi);
+    /// graph.add_undirected_edge(&data_1, &data_2, 10);
+    /// graph.add_undirected_edge(&data_2, &data_3, 15);
+    /// graph.add_undirected_edge(&data_3, &data_4, 20);
     ///
     /// assert!(graph.can_traverse_to(&data_1, &data_4));
     /// graph.remove_vertex(&data_3);
@@ -705,7 +644,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use data_structures::graph::{Graph, EdgeDirection};
+    /// use data_structures::graph::Graph;
     ///
     /// let mut graph = Graph::new();
     ///
@@ -720,9 +659,9 @@ where
     /// graph.add_vertex(&data_4);
     /// assert_eq!(graph.size(), 4);
     ///
-    /// graph.add_edge(&data_1, &data_2, 10, EdgeDirection::Bi);
-    /// graph.add_edge(&data_2, &data_3, 15, EdgeDirection::Bi);
-    /// graph.add_edge(&data_3, &data_4, 20, EdgeDirection::Bi);
+    /// graph.add_undirected_edge(&data_1, &data_2, 10);
+    /// graph.add_undirected_edge(&data_2, &data_3, 15);
+    /// graph.add_undirected_edge(&data_3, &data_4, 20);
     ///
     /// assert_eq!(graph.traverse_all_nodes(&data_1), vec![&50, &25, &10, &100]);
     /// ```
@@ -761,14 +700,62 @@ where
     }
 
     /// Computes the shortest path between two vertices using Dijstra's Shortest Path
-    /// algorithm. If a shortest path is found, it is returned as an `Option<Vec<&T>`,
-    /// with the start of the `Vec` being the start of the path. If no path is possible
-    /// then `None` is returned
+    /// algorithm. If a shortest path is found, it is returned as an `Option<(Vec<&T>, W)>`.
+    /// Where `Vec<&T>` is a vector of nodes, in the order of start to finish, and `W` is
+    /// the total weighting for the path.
+    ///
+    /// If no path is possible then `None` is returned
+    ///
+    /// # Notes
+    /// As the API offered with this algorithm is fairly flexible there are a few nuances
+    /// to calling it correctly.
+    ///
+    /// ## Method Parameters
+    ///
+    /// The `Min Weighting` parameter in the function needs to be provided to mimic what the **Zero value*
+    /// of whatever weighting you're using within the graph is. In the case of just using some form
+    /// of number `0` can be passed. However if a custom data structure is used, then that needs
+    /// to be passed with the cloest approximation as to what the 0 value is.
     ///
     /// # Examples
-    /// ```rust
+    /// See [`graph`] and [`summary page`] for some more detailed examples of how this method can be used
     ///
+    /// ```rust
+    /// use data_structures::graph::{EdgeDirection, Graph};
+    ///
+    /// let mut graph = Graph::new();
+    ///
+    /// let a = String::from("A");
+    /// let b = String::from("B");
+    /// let c = String::from("C");
+    /// let d = String::from("D");
+    /// let e = String::from("E");
+    /// let f = String::from("F");
+    ///
+    /// graph.add_vertex(&a);
+    /// graph.add_vertex(&b);
+    /// graph.add_vertex(&c);
+    /// graph.add_vertex(&d);
+    /// graph.add_vertex(&e);
+    /// graph.add_vertex(&f);
+    ///
+    /// graph.add_undirected_edge(&a, &b, 4);
+    /// graph.add_undirected_edge(&a, &c, 2);
+    /// graph.add_undirected_edge(&b, &e, 3);
+    /// graph.add_undirected_edge(&c, &d, 2);
+    /// graph.add_undirected_edge(&c, &f, 4);
+    /// graph.add_undirected_edge(&d, &e, 3);
+    /// graph.add_undirected_edge(&d, &f, 1);
+    /// graph.add_undirected_edge(&e, &f, 1);
+    ///
+    /// assert_eq!(
+    ///     graph.dijkstras_shortest_path(&a, &e, 0),
+    ///     Some((vec![&a, &c, &d, &f, &e], 6))
+    /// );
     /// ```
+    ///
+    /// [`graph`]: ./struct.Graph.html#examples
+    /// [`summary page`]: ./index.html
     pub fn dijkstras_shortest_path(
         &self,
         start: &'a T,
@@ -796,7 +783,10 @@ where
             *start_value = Some(min_weighting.clone());
         };
 
-        let start_edge = Edge::new(Direction::Single(Vertex::new(start)), min_weighting.clone());
+        let start_edge = Edge::new(
+            Direction::Directed(Vertex::new(start)),
+            min_weighting.clone(),
+        );
         queue.push(&start_edge);
         visited.insert(start_key);
 
@@ -891,18 +881,44 @@ where
     fn _get_relations(&self, key: u64) -> Option<&Vec<Edge<T, W>>> {
         self.adjacency_list.get(&key)
     }
+
+    fn add_edge(&mut self, from_node: &'a T, to_node: &'a T, weight: W, direction: EdgeDirection) {
+        let _direction = direction.convert(to_node);
+        let edge = Edge::new(_direction, weight.clone());
+        let key = get_key(from_node);
+
+        if let Some(connected_to) = self.adjacency_list.get_mut(&key) {
+            connected_to.push(edge);
+        }
+        // If it's a directed edge, we don't need to add it to the list of the finishing
+        // vertexes relationships - as we can't traverse from our finishing vertex back to the
+        // starting vertex
+        if direction == EdgeDirection::Directed {
+            return;
+        }
+
+        // If it's undirected, then add the relationship into the finishing vertexes
+        // relationships too
+        let _direction = direction.convert(from_node);
+        let edge = Edge::new(_direction, weight);
+        let key = get_key(to_node);
+
+        if let Some(connected_to) = self.adjacency_list.get_mut(&key) {
+            connected_to.push(edge);
+        }
+    }
 }
 
 /// An enum declaring the type of edge that is
 /// being added to the graph.
 ///
 /// Either it is:
-/// - `Single` for a directed edge
-/// - `Bi` for a Bi-directional (undirected) edge
-#[derive(Copy, Clone, Eq, PartialEq)]
+/// - `Directed` for a directed edge
+/// - `Undirected` for a undirected edge
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum EdgeDirection {
-    Single,
-    Bi,
+    Directed,
+    Undirected,
 }
 
 #[derive(Hash, PartialEq, Eq)]
@@ -943,8 +959,8 @@ enum Direction<'a, T>
 where
     T: Eq + Hash,
 {
-    Single(Vertex<'a, T>),
-    Bi(Vertex<'a, T>),
+    Directed(Vertex<'a, T>),
+    Undirected(Vertex<'a, T>),
 }
 
 impl<'a, T, W> Edge<'a, T, W>
@@ -958,15 +974,15 @@ where
 
     fn direction(&self) -> EdgeDirection {
         match &self.direction {
-            Direction::Single(_) => EdgeDirection::Single,
-            Direction::Bi(_) => EdgeDirection::Bi,
+            Direction::Directed(_) => EdgeDirection::Directed,
+            Direction::Undirected(_) => EdgeDirection::Undirected,
         }
     }
 
     fn target_key(&self) -> u64 {
         match &self.direction {
-            Direction::Single(node) => get_key(node),
-            Direction::Bi(node) => get_key(node),
+            Direction::Directed(node) => get_key(node),
+            Direction::Undirected(node) => get_key(node),
         }
     }
 
@@ -1002,8 +1018,8 @@ where
 {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match &self.direction {
-            Direction::Single(node) => node.hash(state),
-            Direction::Bi(node) => node.hash(state),
+            Direction::Directed(node) => node.hash(state),
+            Direction::Undirected(node) => node.hash(state),
         }
     }
 }
@@ -1014,8 +1030,8 @@ impl EdgeDirection {
         T: Eq + Hash,
     {
         match &self {
-            EdgeDirection::Single => Direction::Single(Vertex::new(node)),
-            EdgeDirection::Bi => Direction::Bi(Vertex::new(node)),
+            EdgeDirection::Directed => Direction::Directed(Vertex::new(node)),
+            EdgeDirection::Undirected => Direction::Undirected(Vertex::new(node)),
         }
     }
 }
@@ -1068,8 +1084,8 @@ mod tests {
         graph.add_vertex(&str_2);
         graph.add_vertex(&str_3);
 
-        graph.add_edge(&str_1, &str_2, 10, EdgeDirection::Bi);
-        graph.add_edge(&str_1, &str_3, 10, EdgeDirection::Bi);
+        graph.add_undirected_edge(&str_1, &str_2, 10);
+        graph.add_undirected_edge(&str_1, &str_3, 10);
 
         let result = graph.get_relations(&str_1).unwrap();
         assert_eq!(result.len(), 2);
@@ -1096,9 +1112,9 @@ mod tests {
         graph.add_vertex(&str_3);
         graph.add_vertex(&str_4);
 
-        graph.add_edge(&str_1, &str_2, 10, EdgeDirection::Bi);
-        graph.add_edge(&str_1, &str_3, 10, EdgeDirection::Bi);
-        graph.add_edge(&str_1, &str_4, 10, EdgeDirection::Bi);
+        graph.add_undirected_edge(&str_1, &str_2, 10);
+        graph.add_undirected_edge(&str_1, &str_3, 10);
+        graph.add_undirected_edge(&str_1, &str_4, 10);
 
         assert!(graph.has(&str_1));
         assert!(graph.has(&str_2));
@@ -1111,15 +1127,15 @@ mod tests {
 
         graph.remove_edge(&str_1, &str_3);
         assert_eq!(graph.get_relations(&str_1).unwrap().len(), 2);
-        assert_eq!(graph.get_relations(&str_3).unwrap().len(), 0);
+        assert_eq!(graph.get_relations(&str_3), None);
 
         let result = graph.remove_vertex(&str_1).unwrap();
         assert_eq!(&str_1, result);
 
         assert!(!graph.has(&str_1));
-        assert_eq!(graph.get_relations(&str_2).unwrap().len(), 0);
-        assert_eq!(graph.get_relations(&str_3).unwrap().len(), 0);
-        assert_eq!(graph.get_relations(&str_4).unwrap().len(), 0);
+        assert_eq!(graph.get_relations(&str_2), None);
+        assert_eq!(graph.get_relations(&str_3), None);
+        assert_eq!(graph.get_relations(&str_4), None);
     }
 
     #[test]
@@ -1136,9 +1152,9 @@ mod tests {
         graph.add_vertex(&str_3);
         graph.add_vertex(&str_4);
 
-        graph.add_edge(&str_1, &str_2, 10, EdgeDirection::Bi);
-        graph.add_edge(&str_1, &str_3, 10, EdgeDirection::Bi);
-        graph.add_edge(&str_2, &str_4, 10, EdgeDirection::Bi);
+        graph.add_undirected_edge(&str_1, &str_2, 10);
+        graph.add_undirected_edge(&str_1, &str_3, 10);
+        graph.add_undirected_edge(&str_2, &str_4, 10);
 
         assert!(graph.has(&str_1));
         assert!(graph.has(&str_2));
@@ -1164,45 +1180,12 @@ mod tests {
         graph.add_vertex(&str_3);
         graph.add_vertex(&str_4);
 
-        graph.add_edge(&str_1, &str_2, 10, EdgeDirection::Bi);
-        graph.add_edge(&str_1, &str_3, 10, EdgeDirection::Bi);
-        graph.add_edge(&str_2, &str_4, 10, EdgeDirection::Bi);
+        graph.add_undirected_edge(&str_1, &str_2, 10);
+        graph.add_undirected_edge(&str_1, &str_3, 10);
+        graph.add_undirected_edge(&str_2, &str_4, 10);
 
         let result = graph.traverse_all_nodes(&str_1);
         let expected = vec![&str_1, &str_3, &str_2, &str_4];
         assert_eq!(result, expected);
-    }
-
-    #[test]
-    fn test_dijkstras() {
-        let mut graph = Graph::new();
-
-        let a = String::from("A");
-        let b = String::from("B");
-        let c = String::from("C");
-        let d = String::from("D");
-        let e = String::from("E");
-        let f = String::from("F");
-
-        graph.add_vertex(&a);
-        graph.add_vertex(&b);
-        graph.add_vertex(&c);
-        graph.add_vertex(&d);
-        graph.add_vertex(&e);
-        graph.add_vertex(&f);
-
-        graph.add_edge(&a, &b, 4, EdgeDirection::Bi);
-        graph.add_edge(&a, &c, 2, EdgeDirection::Bi);
-        graph.add_edge(&b, &e, 3, EdgeDirection::Bi);
-        graph.add_edge(&c, &d, 2, EdgeDirection::Bi);
-        graph.add_edge(&c, &f, 4, EdgeDirection::Bi);
-        graph.add_edge(&d, &e, 3, EdgeDirection::Bi);
-        graph.add_edge(&d, &f, 1, EdgeDirection::Bi);
-        graph.add_edge(&e, &f, 1, EdgeDirection::Bi);
-
-        assert_eq!(
-            graph.dijkstras_shortest_path(&a, &e, 0),
-            Some((vec![&a, &c, &d, &f, &e], 6))
-        );
     }
 }
