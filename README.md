@@ -4,41 +4,50 @@ A Cargo Workspace storing practice implementations of various data structures an
 
 ## [Data Structures](https://github.com/naamancurtis/rust_data_structures_and_algorithms/tree/master/data_structures/src)
 #### Lists
- - Singly Linked List
- - Deque
- - Doubly Linked List
+ - [Singly Linked List](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/data_structures/src/singly_linked_list.rs)
+ - [Deque](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/data_structures/src/deque.rs)
+ - [Doubly Linked List](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/data_structures/src/doubly_linked_list.rs)
  
 #### Graphs
- - Undirected Graph
- - Graph _(Directed & Weighted)_
+ - [Undirected Graph](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/data_structures/src/undirected_graph.rs)
+    - Breadth First Search
+    - Depth First Search
+ - [Graph](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/data_structures/src/graph.rs) _(Directed & Weighted)_
+    - Breadth First Search
+    - Depth First Search
+    - Dijkstra's Shortest Path
 
 ##### Trees
- - Binary Tree
- - Binary Search Tree
+ - [Binary Tree](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/data_structures/src/binary_tree.rs)
+   - Depth First Search - _Pre, In and Post Order_
+   - Breadth First Search
+ - [Binary Search Tree](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/data_structures/src/binary_search_tree.rs)
 
 ###### Heaps
- - Binary Heap - _Contains_ **Priority Queue** _API_
+ - [Binary Heap](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/data_structures/src/binary_heap.rs)
+   - Implementation contains a Min Heap, Max Heap
+   - Also contains an api for creating a Priority Queue
 
 ## [Problem Solving Patterns](https://github.com/naamancurtis/rust_data_structures_and_algorithms/tree/master/problem_solving_patterns/src)
- - Frequency Counter
- - Multiple Pointers
- - Recursion
- - Sliding Window
+ - [Frequency Counter](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/problem_solving_patterns/src/frequency_counter_pattern.rs)
+ - [Multiple Pointers](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/problem_solving_patterns/src/multiple_pointers_pattern.rs)
+ - [Recursion](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/problem_solving_patterns/src/recursion.rs)
+ - [Sliding Window](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/problem_solving_patterns/src/sliding_window.rs)
 
 ## [Searching Algorithms](https://github.com/naamancurtis/rust_data_structures_and_algorithms/tree/master/searching/src)
- - Linear Search
- - Binary Search
+ - [Linear Search](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/searching/src/linear_search.rs)
+ - [Binary Search](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/searching/src/binary_search.rs)
 
 ## [Sorting Algorithms](https://github.com/naamancurtis/rust_data_structures_and_algorithms/tree/master/sorting/src)
- - Bubble Sort
- - Insertion Sort
- - Selection Sort
- - Radix Sort
- - Merge Sort
- - Quick Sort
+ - [Bubble Sort](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/sorting/src/bubble_sort.rs)
+ - [Insertion Sort](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/sorting/src/insertion_sort.rs)
+ - [Selection Sort](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/sorting/src/selection_sort.rs)
+ - [Radix Sort](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/sorting/src/radix_sort.rs)
+ - [Merge Sort](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/sorting/src/merge_sort.rs)
+ - [Quick Sort](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/sorting/src/quick_sort.rs)
 
 ## [Sample Problems](https://github.com/naamancurtis/rust_data_structures_and_algorithms/tree/master/sample_problems/src)
-- Find availability in two calendars
+- [Find availability in two calendars](https://github.com/naamancurtis/rust_data_structures_and_algorithms/blob/master/sample_problems/src/find_availability_in_two_calendars.rs)
 
 ## Workspace Documentation
 Most libraries are documented inline with `rustdoc`, to build the docs use [Cargo](https://doc.rust-lang.org/cargo/index.html). 
