@@ -13,8 +13,13 @@
 //! (`'b`), so `'a > 'b`.
 //!
 //! # Examples
+//!
+//! As a sample use case below, we'll look at finding the cheapest path between two cities, using
+//! the price of airline tickets as the weighting for each edge.
+//!
 //! ```rust
 //! use data_structures::graph::{Graph, EdgeDirection};
+//!
 //! #[derive(Hash, PartialEq, Eq, Debug)]
 //! struct City {
 //!     name: String,
@@ -23,6 +28,7 @@
 //!     country: String
 //! }
 //!
+//! // Set up our data for each Vertex of the graph
 //! let new_york = City {
 //!     name: "New York".to_string(),
 //!     population: 8_623_000,
@@ -73,6 +79,8 @@
 //! };
 //!
 //! let mut graph = Graph::new();
+//!
+//! // Add the vertexes to the graph
 //! graph.add_vertex(&new_york);
 //! graph.add_vertex(&san_francisco);
 //! graph.add_vertex(&singapore);
@@ -101,33 +109,65 @@
 //!
 //! assert_eq!(graph.size(), 7);
 //!
-//! assert_eq!(graph.get_relations(&hong_kong), Some(vec![&london, &new_york, &sydney, &san_francisco, &singapore]));
+//! // We can find out what vertices are connected to a given vertex
+//! assert_eq!(
+//!     graph.get_relations(&hong_kong),
+//!     Some(vec![&london, &new_york, &sydney, &san_francisco, &singapore])
+//! );
+//!
+//! // We can also see if it's possible to traverse between two vertices
+//! // This uses a breadth first search to traverse the graph
 //! assert!(graph.can_traverse_to(&new_york, &johannesburg));
 //!
-//! // However given the 1 way connections, New York isn't connected to Hong Kong
-//! assert_eq!(graph.get_relations(&new_york), Some(vec![&london, &san_francisco, &johannesburg]));
+//! // However, given the 1 way connection we've added, although Hong Kong is connected to New York,
+//! // New York isn't connected to Hong Kong
+//! assert_eq!(
+//!     graph.get_relations(&new_york),
+//!     Some(vec![&london, &san_francisco, &johannesburg])
+//! );
 //!
-//! let new_york_to_hong_kong = graph.dijkstras_shortest_path(&new_york, &hong_kong, 0);
-//! assert_eq!(new_york_to_hong_kong, Some((vec![&new_york, &london, &hong_kong], 225 + 391)));
+//! // We can also find the shortest path given the weighting we've added to the graph
+//! // (in this example, the price of the airline tickets)
+//! //
+//! // With this specific implementation, as you're able to add custom weightings to the graph,
+//! // you need to specify the "Zero value" for the weighting while calling Dijkstra's,
+//! // in this case it would be $0.
+//! //
+//! // The result contains the vertices in the shortest path, and the total weight of the path
+//! // ie. the airports we would fly through, and the total cost of the trip
+//! assert_eq!(
+//!     graph.dijkstras_shortest_path(&new_york, &hong_kong, 0),
+//!     Some((vec![&new_york, &london, &hong_kong], 616))
+//! );
 //!
-//! let sydney_to_johannesburg = graph.dijkstras_shortest_path(&sydney, &johannesburg, 0);
-//! assert_eq!(sydney_to_johannesburg, Some((vec![&sydney, &san_francisco, &new_york, &johannesburg], 447 + 154 + 431)));
+//! assert_eq!(
+//!     graph.dijkstras_shortest_path(&sydney, &johannesburg, 0),
+//!     Some((vec![&sydney, &san_francisco, &new_york, &johannesburg], 1032))
+//! );
 //!
+//! // We can remove an entire vertex, which automatically removes all relationships
 //! assert_eq!(graph.remove_vertex(&london), Some(&london));
 //! assert!(!graph.has(&london));
 //! assert_eq!(graph.size(), 6);
 //!
+//! // We can also remove individual edges (relationships) within the graph
 //! graph.remove_edge(&san_francisco, &sydney);
 //! graph.remove_edge(&hong_kong, &sydney);
 //!
-//! // Now we've removed London and the routes between San Francisco and Sydney and Hong Kong and Sydney
-//! // We can fly from Johannesburg to Sydney, but not from Sydney to Johannesburg
+//! // Now we've removed London completely and the routes:
+//! // - San Francisco <-> Sydney
+//! // - Hong Kong <-> Sydney
+//! // We are able to fly from `Johannesburg -> Sydney`, but not from `Sydney -> Johannesburg`
 //!
+//! // We can either check if the graph is traversable
 //! assert!(!graph.can_traverse_to(&sydney, &johannesburg));
 //! assert!(graph.can_traverse_to(&johannesburg, &sydney));
 //!
-//! let sydney_to_johannesburg = graph.dijkstras_shortest_path(&sydney, &johannesburg, 0);
-//! assert_eq!(sydney_to_johannesburg, None);
+//! // Or we can attempt to find the shortest path, as there isn't one, `None` is returned
+//! assert_eq!(
+//!     graph.dijkstras_shortest_path(&sydney, &johannesburg, 0),
+//!     None
+//! );
 //! ```
 
 use crate::deque;
