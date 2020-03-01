@@ -192,24 +192,24 @@ where
 ///
 /// A wrapper around an underlying adjacency list. The type of the graph `Graph<T, W>` is
 /// constructable so long as `T` _(The underlying type of each vertex)_ implements `Hash & Eq` and
-/// `W` the weighting for each Edge implements `PartialOrd + PartialEq`.
+/// `W` the weighting for each Edge implements `Ord + PartialEq + Clone + Add<Output = W>`. These
+/// constraints are required on the weight to allow it to both be generic, but also predictable
+/// in it's behaviour for various algorithm optimisations - _ie. using a priority queue_
+///
+/// ## Lifetimes
+///
 /// The graph does not consume any values in it's creation, instead just holding a
-/// reference to them, as such any data put into the graph must have a lifetime that lasts
-/// at least as long as the graph itself.
+/// reference to them. As such if we assign a lifetime of `'a` to the underlying data in the
+/// grap and a lifetime of `'b` to the graph, then `'a > 'b` in all cases.
 ///
 /// ## Edges
 ///
-/// Each edge between vertexes in the graph must have both a direction and a weight. An enum
-/// [`EdgeDirection`] is provided which can either be `Single`, for a directed edge, or `Bi`
-/// for a bi-directional edge. The weighting on the graph can be anything, provided it
-/// implements both `PartialOrd + PartialEq`.
-///
-/// ## Weighting
-///
-/// The **Weighting: `W`** of used for each edge in the graph must implement `Ord + PartialEq + Clone + Add<Output = W>`
-/// this is so that it can be used within the [`binary heap`] acting as a Priority Queue within some of the algorithms. See
-/// the offical rust docs for an example of how these traits need to be implemented. There are
-/// also additional examples below and on the [`summary page`].
+/// Each edge between vertexes in the graph must have both a direction and a weight.
+///  - Edges can be added by using either the [`add_undirected_edge`] or [`add_directed_edge`] methods
+///  - A weight is provided as the final argument to both methods, and can be any type, so long as
+/// that type implements `Ord + PartialEq + Clone + Add<Output = W>`. See the example below for
+/// how this is done practically, if more information or examples required see the [`binary heap`]
+/// docs which is where a majority of the constraints are derived from.
 ///
 /// # Examples
 ///
@@ -253,12 +253,162 @@ where
 /// ```
 ///
 /// More detailed example using non-primitive data structures
+///
 /// ```rust
 /// use data_structures::graph::Graph;
-/// // todo
+///
+/// #[derive(Hash, PartialEq, Eq, Debug)]
+/// struct City {
+///     name: String,
+///     population: u32,
+///     airport: String,
+///     country: String
+/// }
+///
+/// // Set up our data for each Vertex of the graph
+/// let new_york = City {
+///     name: "New York".to_string(),
+///     population: 8_623_000,
+///     airport: "JFK".to_string(),
+///     country: "USA".to_string(),
+/// };
+///
+/// let san_francisco = City {
+///     name: "San Francisco".to_string(),
+///     population: 884_363,
+///     airport: "San Francisco International".to_string(),
+///     country: "USA".to_string(),
+/// };
+///
+/// let london = City {
+///     name: "London".to_string(),
+///     population: 8_900_000,
+///     airport: "Heathrow".to_string(),
+///     country: "UK".to_string(),
+/// };
+///
+/// let hong_kong = City {
+///     name: "Hong Kong".to_string(),
+///     population: 7_392_000,
+///     airport: "Hong Kong International".to_string(),
+///     country: "China".to_string(),
+/// };
+///
+/// let singapore = City {
+///     name: "Singapore".to_string(),
+///     population: 5_612_000,
+///     airport: "Singapore Changi".to_string(),
+///     country: "Singapore".to_string(),
+/// };
+///
+/// let sydney = City {
+///     name: "Sydney".to_string(),
+///     population: 5_230_000,
+///     airport: "Sydney".to_string(),
+///     country: "Australia".to_string(),
+/// };
+///
+/// let johannesburg = City {
+///     name: "Johannesburg".to_string(),
+///     population: 5_635_000,
+///     airport: "O.R. Tambo International".to_string(),
+///     country: "South Africa".to_string(),
+/// };
+///
+/// let mut graph = Graph::new();
+///
+/// // Add the vertexes to the graph
+/// graph.add_vertex(&new_york);
+/// graph.add_vertex(&san_francisco);
+/// graph.add_vertex(&singapore);
+/// graph.add_vertex(&london);
+/// graph.add_vertex(&hong_kong);
+/// graph.add_vertex(&sydney);
+/// graph.add_vertex(&johannesburg);
+///
+/// // Adding the price of flights between each airport
+/// graph.add_undirected_edge(&new_york, &london, 225);
+/// graph.add_undirected_edge(&new_york, &san_francisco, 154);
+/// graph.add_directed_edge(&new_york, &johannesburg, 431);
+///
+/// graph.add_undirected_edge(&london, &hong_kong, 391);
+/// graph.add_undirected_edge(&london, &johannesburg, 823);
+/// graph.add_undirected_edge(&london, &san_francisco, 391);
+/// graph.add_undirected_edge(&london, &singapore, 447);
+///
+/// graph.add_directed_edge(&hong_kong, &new_york, 624);
+/// graph.add_undirected_edge(&hong_kong, &sydney, 494);
+/// graph.add_directed_edge(&hong_kong, &san_francisco, 565);
+/// graph.add_undirected_edge(&hong_kong, &singapore, 123);
+///
+/// graph.add_directed_edge(&johannesburg, &sydney, 820);
+/// graph.add_undirected_edge(&sydney, &san_francisco, 447);
+///
+/// assert_eq!(graph.size(), 7);
+///
+/// // We can find out what vertices are connected to a given vertex
+/// assert_eq!(
+///     graph.get_relations(&hong_kong),
+///     Some(vec![&london, &new_york, &sydney, &san_francisco, &singapore])
+/// );
+///
+/// // We can also see if it's possible to traverse between two vertices
+/// // This uses a breadth first search to traverse the graph
+/// assert!(graph.can_traverse_to(&new_york, &johannesburg));
+///
+/// // However, given the 1 way connection we've added, although Hong Kong is connected to New York,
+/// // New York isn't connected to Hong Kong
+/// assert_eq!(
+///     graph.get_relations(&new_york),
+///     Some(vec![&london, &san_francisco, &johannesburg])
+/// );
+///
+/// // We can also find the shortest path given the weighting we've added to the graph
+/// // (in this example, the price of the airline tickets)
+/// //
+/// // With this specific implementation, as you're able to add custom weightings to the graph,
+/// // you need to specify the "Zero value" for the weighting while calling Dijkstra's,
+/// // in this case it would be $0.
+/// //
+/// // The result contains the vertices in the shortest path, and the total weight of the path
+/// // ie. the airports we would fly through, and the total cost of the trip
+/// assert_eq!(
+///     graph.dijkstras_shortest_path(&new_york, &hong_kong, 0),
+///     Some((vec![&new_york, &london, &hong_kong], 616))
+/// );
+///
+/// assert_eq!(
+///     graph.dijkstras_shortest_path(&sydney, &johannesburg, 0),
+///     Some((vec![&sydney, &san_francisco, &new_york, &johannesburg], 1032))
+/// );
+///
+/// // We can remove an entire vertex, which automatically removes all relationships
+/// assert_eq!(graph.remove_vertex(&london), Some(&london));
+/// assert!(!graph.has(&london));
+/// assert_eq!(graph.size(), 6);
+///
+/// // We can also remove individual edges (relationships) within the graph
+/// graph.remove_edge(&san_francisco, &sydney);
+/// graph.remove_edge(&hong_kong, &sydney);
+///
+/// // Now we've removed London completely and the routes:
+/// // - San Francisco <-> Sydney
+/// // - Hong Kong <-> Sydney
+/// // We are able to fly from `Johannesburg -> Sydney`, but not from `Sydney -> Johannesburg`
+///
+/// // We can either check if the graph is traversable
+/// assert!(!graph.can_traverse_to(&sydney, &johannesburg));
+/// assert!(graph.can_traverse_to(&johannesburg, &sydney));
+///
+/// // Or we can attempt to find the shortest path, as there isn't one, `None` is returned
+/// assert_eq!(
+///     graph.dijkstras_shortest_path(&sydney, &johannesburg, 0),
+///     None
+/// );
 /// ```
 ///
-/// [`summary page`]: ./index.html
+/// [`add_directed_edge`]: ./struct.Graph.html#method.add_directed_edge
+/// [`add_undirected_edge`]: ./struct.Graph.html#method.add_undirected_edge
 /// [`binary heap`]: https://doc.rust-lang.org/std/collections/binary_heap/index.html
 #[derive(Default)]
 pub struct Graph<'a, T, W>
@@ -270,7 +420,7 @@ where
     key_value_map: HashMap<u64, Vertex<'a, T>>,
 }
 
-/// Public API
+// Public API
 impl<'a, T, W> Graph<'a, T, W>
 where
     T: Eq + Hash,
@@ -701,14 +851,15 @@ where
 
     /// Computes the shortest path between two vertices using Dijstra's Shortest Path
     /// algorithm. If a shortest path is found, it is returned as an `Option<(Vec<&T>, W)>`.
-    /// Where `Vec<&T>` is a vector of nodes, in the order of start to finish, and `W` is
+    /// Where `Vec<&T>` is a vector of vertices, in the order of start to finish, and `W` is
     /// the total weighting for the path.
     ///
     /// If no path is possible then `None` is returned
     ///
     /// # Notes
     /// As the API offered with this algorithm is fairly flexible there are a few nuances
-    /// to calling it correctly.
+    /// to calling it correctly please see [`edges`] for how the weights of the edges should
+    /// be provided to the graph.
     ///
     /// ## Method Parameters
     ///
@@ -718,7 +869,7 @@ where
     /// to be passed with the cloest approximation as to what the 0 value is.
     ///
     /// # Examples
-    /// See [`graph`] and [`summary page`] for some more detailed examples of how this method can be used
+    /// See [`graph`] for more examples
     ///
     /// ```rust
     /// use data_structures::graph::{EdgeDirection, Graph};
@@ -755,7 +906,7 @@ where
     /// ```
     ///
     /// [`graph`]: ./struct.Graph.html#examples
-    /// [`summary page`]: ./index.html
+    /// [`edges`]: ./struct.Graph.html#edges
     pub fn dijkstras_shortest_path(
         &self,
         start: &'a T,
@@ -768,6 +919,7 @@ where
 
         let finish_key = get_key(finish);
 
+        // Set up the data structures required
         let mut queue = BinaryHeap::new();
         let mut distances = HashMap::new();
         let mut previous = HashMap::new();
@@ -778,6 +930,7 @@ where
             previous.insert(*key, None);
         });
 
+        // Add the start key to the data structures
         let start_key = get_key(start);
         if let Some(start_value) = distances.get_mut(&start_key) {
             *start_value = Some(min_weighting.clone());
@@ -793,10 +946,12 @@ where
         let mut current_key;
         let mut result = Vec::new();
         let mut total = min_weighting;
+
         while let Some(next) = queue.pop() {
             current_key = next.target_key();
             visited.insert(current_key);
 
+            // If we enter this If block, we're at the target vertex
             if current_key == finish_key {
                 result.push(current_key);
                 if let Some(total_distance) = distances.get(&current_key) {
@@ -815,6 +970,8 @@ where
                 break;
             }
 
+            // This if block should always trigger given that every vertex should be in the
+            // adjacency list
             if let Some(siblings) = self.adjacency_list.get(&current_key) {
                 for next_vertex in siblings.iter() {
                     let sibling_key = get_key(next_vertex);
@@ -824,6 +981,9 @@ where
                     queue.push(&next_vertex);
 
                     if let Some(distance) = distances.get(&current_key) {
+                        // Here we see if there is currently a distance for this vertex
+                        // in the data structure, we then create a candidate distance to
+                        // see if it's shorter than what we previously had
                         let mut candidate = match distance {
                             Some(distance) => {
                                 W::from(distance.clone() + next_vertex.weight().clone())
@@ -836,18 +996,20 @@ where
                             .expect("This unwrap should be safe as we've added it in to the keys");
 
                         match distance_weight {
+                            // If there was no previous distance for the sibling, then we always add it in
+                            None => {
+                                distances.insert(sibling_key, Some(candidate));
+                                if let Some(sibling) = previous.get_mut(&sibling_key) {
+                                    *sibling = Some(current_key);
+                                }
+                            }
+                            // Otherwise we only update everything if the candidate is less than the current weight
                             Some(weight) => {
                                 if &mut candidate < weight {
                                     *weight = candidate;
                                     if let Some(sibling) = previous.get_mut(&sibling_key) {
                                         *sibling = Some(current_key);
                                     }
-                                }
-                            }
-                            None => {
-                                distances.insert(sibling_key, Some(candidate));
-                                if let Some(sibling) = previous.get_mut(&sibling_key) {
-                                    *sibling = Some(current_key);
                                 }
                             }
                         };
@@ -870,7 +1032,7 @@ where
     }
 }
 
-/// Private API
+// Private API
 impl<'a, T, W> Graph<'a, T, W>
 where
     T: Eq + Hash,
@@ -929,19 +1091,19 @@ where
     value: &'a T,
 }
 
-/// A private data structure that holds the relationships between vertexes.
-///
-/// The `direction member` holds the type of edge that it is, along with
-/// the node that this edge connects to. As edges are created and inserted into the
-/// in a graph in a controlled manner the way to read the data flow would be:
-///
-/// `Graph.adjacency_list[from_vertex] : [Edge.direction(to_vertex)]`
-///
-/// All of the edges that a vertex is connected to is stored in it's corresponding
-/// entry in it's adjacency list.
-/// In the event that the type of Edge is `Single`, then it is only added in the
-/// start vertexes list of relationships. If the type of edge is `Bi`, then it is
-/// added in both vertexes relationships
+// A private data structure that holds the relationships between vertexes.
+//
+// The `direction member` holds the type of edge that it is, along with
+// the node that this edge connects to. As edges are created and inserted into the
+// in a graph in a controlled manner the way to read the data flow would be:
+//
+// `Graph.adjacency_list[from_vertex] : [Edge.direction(to_vertex)]`
+//
+// All of the edges that a vertex is connected to is stored in it's corresponding
+// entry in it's adjacency list.
+// In the event that the type of Edge is `Single`, then it is only added in the
+// start vertexes list of relationships. If the type of edge is `Bi`, then it is
+// added in both vertexes relationships
 #[derive(Eq, PartialEq)]
 struct Edge<'a, T, W>
 where
